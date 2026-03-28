@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: none; user-select: none; }
+    body, html { margin:0; padding:0; width:100%; height:100%; background:#0b0e11; color:white; overflow:hidden; position:fixed; font-family:sans-serif; }
+    .app { height:100%; display:flex; flex-direction:column; padding:15px; }
+    .page { display:none; flex-direction:column; height:100%; width:100%; overflow-y:auto; }
+    .active { display:flex; }
+    input { width:100%; padding:15px; margin:8px 0; background:#1c2127; border:1px solid #333; color:#fff; border-radius:12px; font-size:16px; }
+    .btn { width:100%; padding:18px; border:none; border-radius:15px; font-weight:bold; font-size:18px; cursor:pointer; margin-top:10px; }
+    .primary { background:#f0b90b; color:#000; }
+    #chart { flex:1; min-height:250px; background:#000; margin:10px 0; border-radius:15px; border:1px solid #222; position:relative; overflow:hidden; }
+    .header { display:flex; justify-content:space-between; align-items:center; padding:5px 0; }
+    #timer { font-size:30px; color:#f0b90b; font-weight:bold; }
+    .candle { width:14px; position:absolute; border-radius:2px; transition:0.2s linear; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div id="loginPage" class="page active" style="justify-content:center;">
+      <h1 style="text-align:center; color:#f0b90b; font-size:40px;">TRADE PRO</h1>
+      <input type="email" id="lEmail" placeholder="Enter ID">
+      <button class="btn primary" onclick="doLogin()">LOGIN</button>
+    </div>
+    <div id="tradePage" class="page">
+      <div class="header">
+        <span>Balance: <b id="balTxt">$1000</b></span>
+        <div id="timer">01:00</div>
+      </div>
+      <div id="chart"></div>
+      <div class="controls">
+        <input type="number" id="tAmt" value="10" style="text-align:center;">
+        <div style="display:flex; gap:10px; padding-bottom:10px;">
+          <button class="btn" style="background:#02c076; color:#fff; flex:1;" onclick="placeTrade('UP')">UP</button>
+          <button class="btn" style="background:#f84960; color:#fff; flex:1;" onclick="placeTrade('DOWN')">DOWN</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <script>
+    const firebaseConfig = { databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com/" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let balance = 1000, lastP = 50, candle = null, candleStart = 50, seconds = 60, activeTrade = null;
+    let livePriceFromAdmin = 50, adminResult = "WIN";
+
+    db.ref('/').on('value', (snap) => {
+      const data = snap.val();
+      if(data) {
+        livePriceFromAdmin = parseFloat(data.livePrice || 50);
+        adminResult = data.adminResult || "WIN";
+      }
+    });
+
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function doLogin() { showPage('tradePage'); setInterval(updateMarket, 500); startTimer(); }
+
+    function updateMarket() {
+      if(!candle) createCandle();
+      lastP = livePriceFromAdmin + (Math.random() * 0.5); 
+      let diff = lastP - candleStart;
+      candle.style.height = Math.abs(diff*4.5)+"px";
+      candle.style.bottom = (diff>=0?candleStart:lastP)+"%";
+      candle.style.background = diff>=0?"#02c076":"#f84960";
+    }
+
+    function createCandle() {
+      candleStart=lastP; candle=document.createElement('div'); candle.className='candle';
+      candle.style.right="25px"; candle.style.bottom=lastP+"%";
+      Array.from(document.getElementById('chart').children).forEach(c=>c.style.right=(parseInt(c.style.right)+35)+"px");
+      document.getElementById('chart').appendChild(candle);
+    }
+
+    function startTimer() {
+      setInterval(() => {
+        seconds--; document.getElementById('timer').innerText="00:"+(seconds<10?"0":"")+seconds;
+        if(seconds<=0){ checkResult(); seconds=60; createCandle(); }
+      }, 1000);
+    }
+
+    function placeTrade(t) { activeTrade={type:t, amount:document.getElementById('tAmt').value}; alert("Order Placed: "+t); }
+
+    function checkResult() {
+      if(!activeTrade) return;
+      let win = (adminResult === "WIN");
+      if(win) { balance += activeTrade.amount * 1.8; alert("WINNER! 💰"); }
+      else { balance -= activeTrade.amount; alert("LOSS! ❌"); }
+      document.getElementById('balTxt').innerText = "$" + balance.toFixed(2);
+      activeTrade = null;
+    }
+  </script>
+</body>
+</html>
