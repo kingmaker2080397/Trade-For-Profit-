@@ -6,85 +6,117 @@
     <title>Trade Pro | Abubakar Hussain</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #0b0e11; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .app-container { width: 100%; max-width: 420px; }
-        .glass { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(10px); border-radius: 28px; }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
-        .input-box { width: 100%; background: #1c2127; border: 1px solid #333; padding: 14px; border-radius: 12px; color: white; margin-bottom: 15px; outline: none; }
+        body { background: #0b0e11; color: white; font-family: sans-serif; margin: 0; padding: 15px; }
+        .glass { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 24px; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
+        .input-box { width: 100%; background: #1c2127; border: 1px solid #333; padding: 14px; border-radius: 12px; color: white; margin-bottom: 12px; outline: none; }
+        #authOverlay { display: flex; position: fixed; inset: 0; background: #0b0e11; z-index: 5000; align-items: center; justify-content: center; padding: 20px; }
     </style>
 </head>
-<body>
+<body class="max-w-md mx-auto">
 
-    <div class="app-container">
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Trading Account</p>
-                <h1 class="text-xl font-bold text-blue-500">PRO TRADER ✅</h1>
-            </div>
-            <div class="glass px-5 py-2 rounded-2xl text-yellow-500 font-bold">$ <span id="balanceDisplay">1000.00</span></div>
-        </div>
-        
-        <div class="glass p-10 mb-8 text-center shadow-2xl border-t-2 border-blue-500 relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-green-500"></div>
-            <p class="text-gray-400 text-sm uppercase tracking-widest font-semibold">Live Market Price</p>
-            <div id="livePrice" class="text-7xl font-black text-green-400 my-1 transition-all">50.00</div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-            <button onclick="document.getElementById('depModal').style.display='flex'" class="glass p-6 rounded-3xl flex flex-col items-center active:scale-95 transition-all">
-                <span class="text-3xl mb-2">📥</span><span class="font-bold text-sm">Deposit</span>
-            </button>
-            <button onclick="document.getElementById('withModal').style.display='flex'" class="glass p-6 rounded-3xl flex flex-col items-center active:scale-95 transition-all">
-                <span class="text-3xl mb-2">📤</span><span class="font-bold text-sm">Withdraw</span>
-            </button>
+    <div id="authOverlay">
+        <div class="glass p-8 w-full border-t-4 border-blue-500 shadow-2xl">
+            <h2 class="text-3xl font-black mb-2 text-blue-500">Welcome!</h2>
+            <p class="text-gray-400 mb-6 text-sm">Create your trading account to start.</p>
+            <input type="text" id="userName" placeholder="Full Name" class="input-box">
+            <input type="email" id="userEmail" placeholder="Email Address" class="input-box">
+            <button onclick="handleSignUp()" class="w-full bg-blue-600 p-4 rounded-xl font-bold shadow-lg active:scale-95 transition-all">START TRADING</button>
         </div>
     </div>
 
+    <div class="flex justify-between items-center mb-6 mt-4">
+        <div>
+            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Live Wallet</p>
+            <h1 id="displayName" class="text-lg font-bold text-white">Guest User</h1>
+        </div>
+        <div class="glass px-5 py-2 text-green-400 font-black text-lg border border-green-500/20">$ <span id="balanceDisplay">0.00</span></div>
+    </div>
+
+    <div class="glass p-1 mb-6 h-72 border border-blue-500/20 overflow-hidden shadow-inner">
+        <iframe src="https://www.tradingview.com/widgetembed/?symbol=BTCUSD&interval=1&theme=dark" width="100%" height="100%" frameborder="0"></iframe>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-6">
+        <button onclick="openModal('depModal')" class="glass p-6 flex flex-col items-center hover:bg-blue-500/10">
+            <span class="text-2xl mb-1">💳</span><span class="text-xs font-bold uppercase">Deposit</span>
+        </button>
+        <button onclick="openModal('withModal')" class="glass p-6 flex flex-col items-center hover:bg-red-500/10">
+            <span class="text-2xl mb-1">🏦</span><span class="text-xs font-bold uppercase">Withdraw</span>
+        </button>
+    </div>
+
+    <a href="https://wa.me/923442585087" class="fixed bottom-6 right-6 bg-green-500 w-14 h-14 rounded-full flex items-center justify-center shadow-2xl z-50 animate-bounce">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="30">
+    </a>
+
     <div id="depModal" class="modal">
-        <div class="glass p-8 w-full max-w-sm border border-blue-500 shadow-blue-500/20">
-            <h2 class="text-2xl font-bold mb-4 text-blue-400 text-center">Deposit Funds</h2>
-            <div class="bg-blue-500/10 p-5 rounded-2xl mb-6 border border-blue-500/20 text-center">
-                <p class="text-gray-300 text-sm italic mb-1">Send to Abubakar Hussain:</p>
-                <p class="text-2xl font-black text-white mt-1 uppercase tracking-widest">Abubakar Hussain</p>
-                <p class="text-3xl font-black text-white mt-2">03442585087</p>
-                <p class="text-xs text-yellow-500 mt-2 font-bold italic underline">JazzCash / EasyPaisa / Raast ID</p>
+        <div class="glass p-8 w-full max-w-sm border border-blue-500">
+            <h3 class="font-bold mb-4 text-center">Deposit Funds</h3>
+            <div class="bg-blue-500/10 p-4 rounded-xl mb-4 text-center border border-blue-500/20">
+                <p class="text-xs text-gray-400">Send to Abubakar Hussain</p>
+                <p class="font-black text-xl">03442585087</p>
             </div>
-            <input type="number" id="depAmt" placeholder="Enter Amount (PKR)" class="input-box">
-            <input type="text" id="depTid" placeholder="Enter Transaction ID (TID)" class="input-box">
-            <button onclick="submitDeposit()" class="w-full bg-blue-600 p-4 rounded-xl font-bold hover:bg-blue-500">SUBMIT REQUEST</button>
-            <button onclick="document.getElementById('depModal').style.display='none'" class="w-full mt-4 text-gray-500 text-sm">Cancel</button>
+            <input type="number" id="depAmt" placeholder="Amount (PKR)" class="input-box">
+            <input type="text" id="depTid" placeholder="Transaction ID" class="input-box">
+            <button onclick="submitReq('deposits', 'depAmt', 'depTid')" class="w-full bg-blue-600 p-4 rounded-xl font-bold">SUBMIT</button>
+            <button onclick="closeModal('depModal')" class="w-full mt-4 text-gray-500 text-sm">Cancel</button>
+        </div>
+    </div>
+
+    <div id="withModal" class="modal">
+        <div class="glass p-8 w-full max-w-sm border border-red-500">
+            <h3 class="font-bold mb-4 text-center text-red-500">Request Withdraw</h3>
+            <input type="number" id="withAmt" placeholder="Amount ($)" class="input-box">
+            <input type="text" id="withAcc" placeholder="Account Number / Title" class="input-box">
+            <button onclick="submitReq('withdrawals', 'withAmt', 'withAcc')" class="w-full bg-red-600 p-4 rounded-xl font-bold text-white">WITHDRAW</button>
+            <button onclick="closeModal('withModal')" class="w-full mt-4 text-gray-500 text-sm">Cancel</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getDatabase, ref, onValue, push, set } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+        import { getDatabase, ref, set, onValue, push } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
-        const firebaseConfig = { databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com/" };
-        const app = initializeApp(firebaseConfig);
+        const config = { databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com/" };
+        const app = initializeApp(config);
         const db = getDatabase(app);
 
-        // Price Update from Admin
-        onValue(ref(db, 'livePrice'), (s) => { 
-            const price = s.val() || "0.00"; 
-            document.getElementById('livePrice').innerText = price;
-        });
-
-        // Submit Deposit Logic
-        window.submitDeposit = () => {
-            const amount = document.getElementById('depAmt').value;
-            const tid = document.getElementById('depTid').value;
-            
-            if(amount && tid) {
-                const depRef = ref(db, 'requests/deposits');
-                const newReq = push(depRef);
-                set(newReq, { amount, tid, status: 'Pending', timestamp: Date.now() }).then(() => {
-                    alert("✅ Request Sent! Abubakar Hussain will verify your TID and add balance.");
-                    document.getElementById('depModal').style.display = 'none';
-                });
-            } else { alert("❌ Please enter both Amount and TID!"); }
+        // Sign Up Logic
+        window.handleSignUp = () => {
+            const name = document.getElementById('userName').value;
+            const email = document.getElementById('userEmail').value;
+            if(name && email) {
+                localStorage.setItem('tradeUser', name);
+                document.getElementById('authOverlay').style.display = 'none';
+                document.getElementById('displayName').innerText = name;
+                // Create user in DB
+                set(ref(db, 'users/' + name), { email: email, balance: 0 });
+            } else { alert("Please fill details!"); }
         };
+
+        // Modal Functions
+        window.openModal = (id) => document.getElementById(id).style.display = 'flex';
+        window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+
+        // Submit Requests
+        window.submitReq = (type, amtId, infoId) => {
+            const amt = document.getElementById(amtId).value;
+            const info = document.getElementById(infoId).value;
+            const user = localStorage.getItem('tradeUser');
+            if(amt && info) {
+                push(ref(db, 'requests/' + type), { user, amt, info, status: 'Pending', time: Date.now() });
+                alert("Request Sent to Admin!");
+                closeModal(type === 'deposits' ? 'depModal' : 'withModal');
+            }
+        };
+
+        // Check if logged in
+        if(localStorage.getItem('tradeUser')) {
+            document.getElementById('authOverlay').style.display = 'none';
+            document.getElementById('displayName').innerText = localStorage.getItem('tradeUser');
+        }
     </script>
-</body>
-    </html>
-    
+</b
+    ody>
+        </html>
