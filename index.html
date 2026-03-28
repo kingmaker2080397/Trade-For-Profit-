@@ -6,39 +6,85 @@
     <title>Trade Pro | Abubakar Hussain</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #0b0e11; color: white; font-family: sans-serif; overflow-x: hidden; }
-        .glass { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
-        .input-box { width: 100%; background: #1c2127; border: 1px solid #333; padding: 12px; border-radius: 12px; color: white; margin-bottom: 15px; outline: none; }
+        body { background: #0b0e11; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .app-container { width: 100%; max-width: 420px; }
+        .glass { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(10px); border-radius: 28px; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+        .input-box { width: 100%; background: #1c2127; border: 1px solid #333; padding: 14px; border-radius: 12px; color: white; margin-bottom: 15px; outline: none; }
     </style>
 </head>
-<body class="p-4">
+<body>
 
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <p class="text-xs text-gray-400 font-bold uppercase">Trading Account</p>
-            <h1 class="text-xl font-bold text-blue-500">PRO TRADER ✅</h1>
+    <div class="app-container">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Trading Account</p>
+                <h1 class="text-xl font-bold text-blue-500">PRO TRADER ✅</h1>
+            </div>
+            <div class="glass px-5 py-2 rounded-2xl text-yellow-500 font-bold">$ <span id="balanceDisplay">1000.00</span></div>
         </div>
-        <div class="glass px-4 py-2 rounded-2xl text-yellow-500 font-bold">
-            $ <span id="balanceDisplay">0.00</span>
+        
+        <div class="glass p-10 mb-8 text-center shadow-2xl border-t-2 border-blue-500 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-green-500"></div>
+            <p class="text-gray-400 text-sm uppercase tracking-widest font-semibold">Live Market Price</p>
+            <div id="livePrice" class="text-7xl font-black text-green-400 my-1 transition-all">50.00</div>
         </div>
-    </div>
 
-    <div class="glass rounded-3xl p-10 mb-6 text-center shadow-2xl border-t-2 border-blue-500">
-        <p class="text-gray-400 text-sm mb-2 uppercase tracking-widest font-semibold">Market Live Price</p>
-        <div id="livePrice" class="text-7xl font-black text-green-400">0.00</div>
-    </div>
-
-    <div class="grid grid-cols-2 gap-4">
-        <button onclick="openModal('depModal')" class="glass p-6 rounded-3xl flex flex-col items-center active:scale-95 transition-all">
-            <span class="text-3xl mb-2">📥</span><span class="font-bold text-sm">Deposit</span>
-        </button>
-        <button onclick="openModal('withModal')" class="glass p-6 rounded-3xl flex flex-col items-center active:scale-95 transition-all">
-            <span class="text-3xl mb-2">📤</span><span class="font-bold text-sm">Withdraw</span>
-        </button>
+        <div class="grid grid-cols-2 gap-4">
+            <button onclick="document.getElementById('depModal').style.display='flex'" class="glass p-6 rounded-3xl flex flex-col items-center active:scale-95 transition-all">
+                <span class="text-3xl mb-2">📥</span><span class="font-bold text-sm">Deposit</span>
+            </button>
+            <button onclick="document.getElementById('withModal').style.display='flex'" class="glass p-6 rounded-3xl flex flex-col items-center active:scale-95 transition-all">
+                <span class="text-3xl mb-2">📤</span><span class="font-bold text-sm">Withdraw</span>
+            </button>
+        </div>
     </div>
 
     <div id="depModal" class="modal">
-        <div class="glass p-6 rounded-3xl w-full max-w-sm border border-blue-500/30">
-            <h2 class="text-xl font-bold mb-2">Deposit Funds</h2>
-            <div class="bg-
+        <div class="glass p-8 w-full max-w-sm border border-blue-500 shadow-blue-500/20">
+            <h2 class="text-2xl font-bold mb-4 text-blue-400 text-center">Deposit Funds</h2>
+            <div class="bg-blue-500/10 p-5 rounded-2xl mb-6 border border-blue-500/20 text-center">
+                <p class="text-gray-300 text-sm italic mb-1">Send to Abubakar Hussain:</p>
+                <p class="text-2xl font-black text-white mt-1 uppercase tracking-widest">Abubakar Hussain</p>
+                <p class="text-3xl font-black text-white mt-2">03442585087</p>
+                <p class="text-xs text-yellow-500 mt-2 font-bold italic underline">JazzCash / EasyPaisa / Raast ID</p>
+            </div>
+            <input type="number" id="depAmt" placeholder="Enter Amount (PKR)" class="input-box">
+            <input type="text" id="depTid" placeholder="Enter Transaction ID (TID)" class="input-box">
+            <button onclick="submitDeposit()" class="w-full bg-blue-600 p-4 rounded-xl font-bold hover:bg-blue-500">SUBMIT REQUEST</button>
+            <button onclick="document.getElementById('depModal').style.display='none'" class="w-full mt-4 text-gray-500 text-sm">Cancel</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getDatabase, ref, onValue, push, set } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+        const firebaseConfig = { databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com/" };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Price Update from Admin
+        onValue(ref(db, 'livePrice'), (s) => { 
+            const price = s.val() || "0.00"; 
+            document.getElementById('livePrice').innerText = price;
+        });
+
+        // Submit Deposit Logic
+        window.submitDeposit = () => {
+            const amount = document.getElementById('depAmt').value;
+            const tid = document.getElementById('depTid').value;
+            
+            if(amount && tid) {
+                const depRef = ref(db, 'requests/deposits');
+                const newReq = push(depRef);
+                set(newReq, { amount, tid, status: 'Pending', timestamp: Date.now() }).then(() => {
+                    alert("✅ Request Sent! Abubakar Hussain will verify your TID and add balance.");
+                    document.getElementById('depModal').style.display = 'none';
+                });
+            } else { alert("❌ Please enter both Amount and TID!"); }
+        };
+    </script>
+</body>
+    </html>
+    
