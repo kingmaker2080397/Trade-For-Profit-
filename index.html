@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TFP | Global Trading</title>
+    <title>TFP | Trade For Profit</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background: #0b0e11; color: white; font-family: sans-serif; margin: 0; padding-bottom: 70px; overflow-x: hidden; }
-        .glass { background: #181a20; border: 1px solid #2b2f36; border-radius: 20px; padding: 15px; margin: 10px; }
+        body { background: #0b0e11; color: white; font-family: sans-serif; margin: 0; padding-bottom: 70px; }
+        .glass { background: #181a20; border: 1px solid #2b2f36; border-radius: 15px; padding: 15px; margin: 10px; }
         .tab-content { display: none; }
         .tab-active { display: block; }
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #181a20; display: flex; justify-content: space-around; padding: 12px; border-top: 1px solid #2b2f36; z-index: 1000; }
-        .nav-item { color: #848e9c; text-align: center; font-size: 10px; cursor: pointer; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #181a20; display: flex; justify-content: space-around; padding: 10px; border-top: 1px solid #2b2f36; z-index: 1000; }
+        .nav-item { color: #848e9c; text-align: center; font-size: 10px; cursor: pointer; flex: 1; }
         .nav-item.active { color: #f0b90b; }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(8px); }
-        input, select { background: #1e2329 !important; border: 1px solid #2b2f36 !important; color: white !important; width: 100%; padding: 14px; border-radius: 12px; margin-bottom: 12px; outline: none; }
-        .coin-btn { background: #2b2f36; color: #848e9c; padding: 8px 16px; border-radius: 10px; font-size: 11px; font-weight: bold; white-space: nowrap; }
+        .coin-btn { background: #2b2f36; color: #848e9c; padding: 8px 15px; border-radius: 8px; font-size: 12px; font-weight: bold; }
         .coin-btn.active { background: #f0b90b; color: black; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
+        input { background: #1e2329 !important; border: 1px solid #2b2f36 !important; color: white !important; width: 100%; padding: 12px; border-radius: 10px; margin-bottom: 10px; outline: none; }
     </style>
 </head>
 <body>
@@ -25,70 +25,92 @@
     <div id="app">
         <div id="home" class="tab-content tab-active">
             <div class="p-4 flex justify-between items-center bg-[#181a20]">
-                <h2 id="mTitle" class="text-yellow-500 font-black italic uppercase">BTC / USDT</h2>
-                <h2 class="text-green-500 font-black text-lg">$<span id="bal1">0.00</span></h2>
+                <h2 id="mTitle" class="text-yellow-500 font-bold italic">BTC / USDT</h2>
+                <h2 class="text-green-500 font-bold text-lg">$<span id="bal1">0.00</span></h2>
             </div>
-            <div class="flex overflow-x-auto gap-2 p-3 bg-[#0b0e11]">
+            <div class="flex gap-2 p-3 overflow-x-auto">
                 <button onclick="changeM('BINANCE:BTCUSDT','BTC')" class="coin-btn active">BTC</button>
                 <button onclick="changeM('OANDA:XAUUSD','GOLD')" class="coin-btn">GOLD</button>
                 <button onclick="changeM('FX:EURUSD','EUR/USD')" class="coin-btn">EUR/USD</button>
             </div>
-            <div class="h-[45vh] bg-black">
+            <div class="h-[40vh]">
                 <iframe id="tv" src="https://www.tradingview.com/widgetembed/?symbol=BINANCE:BTCUSDT&interval=1&theme=dark" width="100%" height="100%" frameborder="0"></iframe>
             </div>
             <div class="p-4">
-                <div class="flex justify-between mb-4 bg-[#181a20] p-3 rounded-xl text-center">
-                    <div class="w-1/2 border-r border-gray-800"><p class="text-[9px] text-gray-500 font-bold">PROFIT</p><p class="text-green-500 font-bold">+95%</p></div>
-                    <div class="w-1/2"><p class="text-[9px] text-gray-500 font-bold">TIME</p><p id="timer" class="text-yellow-500 font-bold">01:00</p></div>
+                <div class="flex justify-between mb-4 bg-[#181a20] p-4 rounded-xl text-center">
+                    <div class="w-1/2 border-r border-gray-700 text-green-500 font-bold"><p class="text-[10px] text-gray-500">PROFIT</p>+95%</div>
+                    <div class="w-1/2 text-yellow-500 font-bold"><p class="text-[10px] text-gray-500">TIME</p><span id="timer">01:00</span></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <button onclick="startTrade('BUY')" class="bg-green-600 h-16 rounded-2xl font-black text-xl active:scale-95 transition">BUY</button>
-                    <button onclick="startTrade('SELL')" class="bg-red-600 h-16 rounded-2xl font-black text-xl active:scale-95 transition">SELL</button>
+                    <button onclick="startTrade('BUY')" class="bg-green-600 h-14 rounded-xl font-bold text-lg active:opacity-70">BUY</button>
+                    <button onclick="startTrade('SELL')" class="bg-red-600 h-14 rounded-xl font-bold text-lg active:opacity-70">SELL</button>
                 </div>
             </div>
         </div>
 
         <div id="wallet" class="tab-content p-4">
-            <h2 class="text-2xl font-black text-yellow-500 mb-6 italic uppercase">Wallet</h2>
-            <div class="glass border-l-4 border-yellow-500">
-                <p class="text-gray-500 text-[10px] font-bold uppercase">Available Balance</p>
-                <h1 class="text-4xl font-black mt-1">$<span id="bal2">0.00</span></h1>
+            <h2 class="text-xl font-bold text-yellow-500 mb-4">WALLET</h2>
+            <div class="glass text-center py-8">
+                <p class="text-gray-500 text-xs uppercase">Balance</p>
+                <h1 class="text-4xl font-bold">$<span id="bal2">0.00</span></h1>
             </div>
             <div class="grid grid-cols-2 gap-4 mt-4">
-                <button onclick="openM('depM')" class="glass text-center py-6"><i class="fa fa-plus-circle text-yellow-500 text-2xl mb-1"></i><p class="text-xs font-bold uppercase">Deposit</p></button>
-                <button onclick="openM('withM')" class="glass text-center py-6"><i class="fa fa-minus-circle text-yellow-500 text-2xl mb-1"></i><p class="text-xs font-bold uppercase">Withdraw</p></button>
+                <button onclick="openM('depM')" class="glass py-6 text-center font-bold text-xs"><i class="fa fa-arrow-down text-yellow-500 block mb-2"></i>DEPOSIT</button>
+                <button onclick="openM('withM')" class="glass py-6 text-center font-bold text-xs"><i class="fa fa-arrow-up text-red-500 block mb-2"></i>WITHDRAW</button>
             </div>
         </div>
 
         <div id="profile" class="tab-content p-4 text-center">
-            <div class="w-20 h-20 bg-yellow-500 rounded-full mx-auto flex items-center justify-center text-black text-3xl mb-4"><i class="fa fa-user-shield"></i></div>
-            <h2 id="uNameDisp" class="text-xl font-black uppercase italic">Trader</h2>
-            <p id="kyc" class="text-[10px] text-red-500 font-bold mt-1 uppercase">Not Verified</p>
-            <div class="glass flex justify-between items-center py-5 mt-6 text-left">
-                <div><p class="text-[9px] text-gray-500 font-bold uppercase">Referral Code</p><span id="rCode" class="text-yellow-500 font-black text-lg">---</span></div>
-                <button onclick="share()" class="bg-yellow-500 text-black px-4 py-2 rounded-xl font-bold text-xs uppercase">Share</button>
+            <div class="w-16 h-16 bg-yellow-500 rounded-full mx-auto flex items-center justify-center text-black text-2xl mb-3"><i class="fa fa-user"></i></div>
+            <h2 id="uNameDisp" class="text-lg font-bold">Trader</h2>
+            <p id="kyc" class="text-[10px] text-red-500 font-bold uppercase">Not Verified</p>
+            <div class="glass text-left mt-6">
+                <p class="text-[10px] text-gray-500">REFERRAL CODE</p>
+                <div class="flex justify-between items-center">
+                    <span id="rCode" class="text-yellow-500 font-bold text-lg">---</span>
+                    <button onclick="share()" class="bg-yellow-500 text-black px-4 py-1 rounded-lg text-xs font-bold">SHARE</button>
+                </div>
             </div>
-            <button onclick="localStorage.clear(); location.reload();" class="mt-10 text-red-500 text-[10px] font-bold uppercase opacity-50 underline">Logout</button>
+            <button onclick="localStorage.clear(); location.reload();" class="mt-10 text-gray-500 text-xs underline">Logout Account</button>
         </div>
 
-        <div class="bottom-nav">
-            <div class="nav-item active" onclick="showTab('home', this)"><i class="fa fa-chart-line text-xl mb-1"></i><p>TRADE</p></div>
-            <div class="nav-item" onclick="showTab('wallet', this)"><i class="fa fa-wallet text-xl mb-1"></i><p>WALLET</p></div>
-            <div class="nav-item" onclick="showTab('profile', this)"><i class="fa fa-user-circle text-xl mb-1"></i><p>ACCOUNT</p></div>
-        </div>
+        <nav class="bottom-nav">
+            <div class="nav-item active" onclick="showTab('home', this)"><i class="fa fa-chart-line text-lg block"></i>TRADE</div>
+            <div class="nav-item" onclick="showTab('wallet', this)"><i class="fa fa-wallet text-lg block"></i>WALLET</div>
+            <div class="nav-item" onclick="showTab('profile', this)"><i class="fa fa-user-circle text-lg block"></i>ACCOUNT</div>
+        </nav>
     </div>
 
     <div id="auth" class="fixed inset-0 bg-[#0b0e11] z-[9999] flex items-center justify-center p-6">
         <div class="glass w-full max-w-sm text-center">
-            <h2 id="aTitle" class="text-yellow-500 font-black mb-6 uppercase text-xl italic">Create Account</h2>
+            <h2 id="aTitle" class="text-yellow-500 font-bold mb-6 text-xl">CREATE ACCOUNT</h2>
             <input id="aEmail" type="email" placeholder="Email Address">
             <input id="aPass" type="password" placeholder="Password">
-            <div id="otpS" class="hidden"><input id="aOTP" type="number" placeholder="Enter OTP" class="text-center font-bold border-2 border-yellow-500"></div>
-            <div id="regS"><input id="aName" type="text" placeholder="Full Name"><input id="aRef" type="text" placeholder="Referral Code (Optional)"></div>
-            <button id="aBtn" onclick="handleAuth()" class="w-full bg-yellow-500 text-black font-black p-4 rounded-2xl uppercase text-xs">Register & Get $1</button>
-            <p onclick="toggleAuth()" class="text-[10px] text-yellow-500 mt-4 cursor-pointer font-bold uppercase"><span id="tBtn">Login Now</span></p>
+            <div id="otpS" class="hidden"><input id="aOTP" type="number" placeholder="Enter 6-Digit OTP"></div>
+            <div id="regS">
+                <input id="aName" type="text" placeholder="Full Name">
+                <input id="aRef" type="text" placeholder="Referral Code (Optional)">
+            </div>
+            <button id="aBtn" onclick="handleAuth()" class="w-full bg-yellow-500 text-black font-bold p-3 rounded-xl mt-4">Register & Get $1</button>
+            <p onclick="toggleAuth()" class="text-xs text-yellow-500 mt-4 cursor-pointer" id="tBtn">Already have an account? Login</p>
         </div>
     </div>
+
+    <div id="depM" class="modal"><div class="glass w-full">
+        <h3 class="text-yellow-500 font-bold mb-4 text-center">DEPOSIT</h3>
+        <p class="text-[10px] bg-black p-3 rounded mb-4">USDT (TRC20): <br><b>TS9AMMyNMZygVfD2NAUeYn7N8sq36ivhLJ</b></p>
+        <input id="txid" type="text" placeholder="Transaction ID (TxID)">
+        <button onclick="subDep()" class="w-full bg-green-600 p-3 rounded-xl font-bold">SUBMIT</button>
+        <button onclick="closeM('depM')" class="w-full mt-2 text-gray-500 text-xs">CLOSE</button>
+    </div></div>
+
+    <div id="withM" class="modal"><div class="glass w-full">
+        <h3 class="text-red-500 font-bold mb-4 text-center">WITHDRAW</h3>
+        <input id="wA" type="number" placeholder="Amount (Min $10)">
+        <input id="wAd" type="text" placeholder="Account Details">
+        <button onclick="alert('OTP sent to email!')" class="w-full bg-yellow-500 text-black p-3 rounded-xl font-bold">GET OTP</button>
+        <button onclick="closeM('withM')" class="w-full mt-2 text-gray-500 text-xs">CLOSE</button>
+    </div></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
@@ -99,9 +121,10 @@
 
         window.toggleAuth = () => {
             isLogin = !isLogin;
-            document.getElementById('aTitle').innerText = isLogin ? "User Login" : "Create Account";
+            document.getElementById('aTitle').innerText = isLogin ? "LOGIN" : "CREATE ACCOUNT";
             document.getElementById('regS').style.display = isLogin ? 'none' : 'block';
             document.getElementById('aBtn').innerText = isLogin ? "Login Now" : "Register & Get $1";
+            document.getElementById('tBtn').innerText = isLogin ? "No account? Register" : "Already have an account? Login";
         };
 
         window.handleAuth = async () => {
@@ -112,20 +135,20 @@
             if(isLogin){
                 const s = await get(ref(db, 'users/'+email));
                 if(s.exists() && s.val().password == pass){ localStorage.setItem('traderEmail', email); location.reload(); }
-                else alert("Wrong Login!");
+                else alert("Invalid Credentials");
             } else {
                 if(!genO){
                     genO = Math.floor(100000 + Math.random() * 900000);
-                    alert("Your Registration OTP: " + genO);
+                    alert("OTP: " + genO);
                     document.getElementById('otpS').classList.remove('hidden');
-                    document.getElementById('aBtn').innerText = "Verify OTP";
+                    document.getElementById('aBtn').innerText = "Verify & Finish";
                 } else {
                     if(document.getElementById('aOTP').value == genO){
                         const name = document.getElementById('aName').value;
                         const myRef = name.substring(0,3).toUpperCase() + Math.floor(1000+Math.random()*9000);
                         await set(ref(db, 'users/'+email), { name: name, password: pass, balance: 1.00, kyc: 'Not Verified', myRef: myRef, refBy: document.getElementById('aRef').value || 'none' });
                         localStorage.setItem('traderEmail', email); location.reload();
-                    } else alert("Invalid OTP!");
+                    } else alert("Wrong OTP");
                 }
             }
         };
@@ -139,7 +162,7 @@
                 document.getElementById('uNameDisp').innerText = d.name;
                 document.getElementById('rCode').innerText = d.myRef;
                 document.getElementById('kyc').innerText = d.kyc;
-                if(d.kyc === 'Verified') document.getElementById('kyc').className = 'text-[10px] text-green-500 font-bold mt-1 uppercase';
+                if(d.kyc === 'Verified') document.getElementById('kyc').style.color = '#22c55e';
             });
         }
 
@@ -151,22 +174,22 @@
         };
 
         let trading = false;
-        window.startTrade = async (type) => {
+        window.startTrade = async () => {
             if(trading) return;
-            const sSnap = await get(ref(db, 'users/'+emailKey));
-            let bal = sSnap.val().balance; if(bal < 5) return alert("Min Trade $5");
+            const s = await get(ref(db, 'users/'+emailKey));
+            let b = s.val().balance; if(b < 5) return alert("Min trade $5");
             
             const modeS = await get(ref(db, 'admin/mode'));
             const mode = modeS.val() || 'random';
 
-            trading = true; update(ref(db, 'users/'+emailKey), { balance: bal - 5 });
-            let sec = 60; const i = setInterval(() => {
+            trading = true; update(ref(db, 'users/'+emailKey), { balance: b - 5 });
+            let sec = 60; const itv = setInterval(() => {
                 sec--; document.getElementById('timer').innerText = "00:" + (sec<10?'0':'') + sec;
                 if(sec <= 0){
-                    clearInterval(i); trading = false; document.getElementById('timer').innerText = "01:00";
+                    clearInterval(itv); trading = false; document.getElementById('timer').innerText = "01:00";
                     let win = (mode === 'win') ? true : (mode === 'loss') ? false : (Math.random() > 0.5);
-                    if(win){ update(ref(db, 'users/'+emailKey), { balance: (bal-5)+9.50 }); alert("TRADE WIN! +$4.50"); }
-                    else alert("TRADE LOSS!");
+                    if(win){ update(ref(db, 'users/'+emailKey), { balance: (b-5)+9.5 }); alert("WIN! +$4.50"); }
+                    else alert("LOSS!");
                 }
             }, 1000);
         };
@@ -179,7 +202,8 @@
         };
         window.openM = (id) => document.getElementById(id).style.display = 'flex';
         window.closeM = (id) => document.getElementById(id).style.display = 'none';
+        window.subDep = () => { push(ref(db, 'admin/deposits'), { user: emailKey, txid: document.getElementById('txid').value }); alert("Submitted!"); closeM('depM'); };
     </script>
 </body>
-                                                                              </html>
-                                                                                     
+    </html>
+    
