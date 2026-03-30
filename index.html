@@ -1,54 +1,195 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trade For Profit</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Trade For Profit | Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #0b0e11; color: white; font-family: sans-serif; margin: 0; padding-bottom: 70px; }
+        .glass { background: #181a20; border: 1px solid #2b2f36; border-radius: 16px; padding: 15px; margin: 10px; }
+        .tab-content { display: none; }
+        .tab-active { display: block; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #181a20; display: flex; justify-content: space-around; padding: 10px; border-top: 1px solid #2b2f36; z-index: 1000; }
+        .nav-item { color: #848e9c; text-align: center; font-size: 10px; cursor: pointer; }
+        .nav-item.active { color: #f0b90b; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 5000; align-items: center; justify-content: center; padding: 20px; }
+    </style>
 </head>
-<body class="bg-black text-white p-5">
+<body>
 
-    <div id="app" class="max-w-sm mx-auto mt-10">
-        <h1 class="text-yellow-500 font-bold text-2xl mb-5">TRADE FOR PROFIT</h1>
-        
-        <div id="loginSection">
-            <input id="uIn" type="text" placeholder="Enter Name" class="w-full p-3 text-black rounded mb-3">
-            <button onclick="reg()" class="w-full bg-yellow-500 text-black font-bold p-3 rounded">START</button>
+    <div id="app">
+        <div id="home" class="tab-content tab-active">
+            <div class="p-4 flex justify-between items-center bg-[#181a20] border-b border-gray-800">
+                <span class="text-yellow-500 font-bold italic text-lg">BTC / USDT</span>
+                <span class="text-green-500 font-black text-xl">$ <span id="bal1">0.00</span></span>
+            </div>
+            <div class="h-[45vh] bg-black">
+                <iframe src="https://www.tradingview.com/widgetembed/?symbol=BTCUSD&interval=1&theme=dark" width="100%" height="100%" frameborder="0"></iframe>
+            </div>
+            <div class="p-4 grid grid-cols-2 gap-4">
+                <button onclick="trade('BUY')" class="bg-green-600 h-16 rounded-2xl font-black text-xl shadow-lg active:scale-95 transition">BUY ↑</button>
+                <button onclick="trade('SELL')" class="bg-red-600 h-16 rounded-2xl font-black text-xl shadow-lg active:scale-95 transition">SELL ↓</button>
+            </div>
+            <p class="text-center text-[10px] text-gray-500 font-bold uppercase tracking-widest">SIGNAL: <span id="timer" class="text-yellow-500">01:00</span></p>
         </div>
 
-        <div id="tradeSection" class="hidden">
-            <p class="text-gray-400">Balance: $<span id="bal">0.00</span></p>
-            <div class="grid grid-cols-2 gap-4 mt-5">
-                <button onclick="trade('win')" class="bg-green-600 p-5 rounded">BUY</button>
-                <button onclick="trade('loss')" class="bg-red-600 p-5 rounded">SELL</button>
+        <div id="wallet" class="tab-content p-4">
+            <h2 class="text-2xl font-black mb-6 text-yellow-500 italic uppercase tracking-widest">My Assets</h2>
+            <div class="glass border-l-4 border-yellow-500 bg-gradient-to-r from-yellow-500/5 to-transparent">
+                <p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Total Balance (USDT)</p>
+                <h1 class="text-4xl font-black mt-1">$ <span id="bal2">0.00</span></h1>
             </div>
+            <div class="grid grid-cols-2 gap-4 mt-6">
+                <button onclick="openM('depM')" class="glass text-center py-6 active:bg-white/5 border-yellow-500/20">
+                    <i class="fa fa-arrow-down-long text-yellow-500 text-3xl mb-2"></i>
+                    <p class="text-xs font-bold uppercase">Deposit</p>
+                </button>
+                <button onclick="openM('withM')" class="glass text-center py-6 active:bg-white/5 border-yellow-500/20">
+                    <i class="fa fa-arrow-up-long text-yellow-500 text-3xl mb-2"></i>
+                    <p class="text-xs font-bold uppercase">Withdraw</p>
+                </button>
+            </div>
+        </div>
+
+        <div id="profile" class="tab-content p-4 text-center">
+            <div class="w-24 h-24 bg-yellow-500 rounded-full mx-auto flex items-center justify-center text-black text-4xl mb-4 shadow-2xl"><i class="fa fa-user-check"></i></div>
+            <h2 id="uName" class="text-2xl font-black italic uppercase tracking-wider">---</h2>
+            <div id="kycStatus" class="inline-block mt-2 px-4 py-1 rounded-full text-[10px] font-black uppercase bg-red-500/20 text-red-500 border border-red-500/30 tracking-widest">Unverified</div>
+            
+            <div class="mt-8 space-y-3 text-left">
+                <div onclick="openM('kycM')" class="glass flex justify-between items-center py-5 cursor-pointer hover:bg-white/5">
+                    <span class="text-sm font-bold italic"><i class="fa fa-id-card mr-3 text-yellow-500"></i> KYC Verification</span>
+                    <i class="fa fa-chevron-right text-gray-600"></i>
+                </div>
+                <div class="glass flex justify-between py-5">
+                    <span class="text-sm text-gray-500 font-bold">INVITE CODE:</span>
+                    <span id="ref" class="text-yellow-500 font-black tracking-widest">---</span>
+                </div>
+                <button onclick="localStorage.clear(); location.reload();" class="w-full p-4 text-red-500 text-[10px] font-black uppercase opacity-60 italic underline">Logout Account</button>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="showTab('home', this)"><i class="fa fa-chart-line text-xl mb-1"></i><p class="font-bold">TRADE</p></div>
+            <div class="nav-item" onclick="showTab('wallet', this)"><i class="fa fa-wallet text-xl mb-1"></i><p class="font-bold">WALLET</p></div>
+            <div class="nav-item" onclick="showTab('profile', this)"><i class="fa fa-user-circle text-xl mb-1"></i><p class="font-bold">ACCOUNT</p></div>
+        </div>
+    </div>
+
+    <div id="depM" class="modal"><div class="glass w-full max-w-sm border-t-4 border-yellow-500 overflow-y-auto max-h-[90vh]">
+        <h3 class="text-yellow-500 font-black mb-4 text-center italic text-lg uppercase tracking-widest">USDT Deposit</h3>
+        <div class="flex justify-center mb-5 p-2 bg-white rounded-2xl mx-auto w-fit shadow-xl">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=TS9AMMyNMZygVfD2NAUeYn7N8sq36ivhLJ" class="w-40 h-40">
+        </div>
+        <div class="text-[11px] space-y-3 mb-6">
+            <div class="bg-black p-4 rounded-xl border border-white/5">
+                <p class="text-gray-500 font-bold mb-1 uppercase text-[9px]">Network</p>
+                <p class="text-white font-black tracking-widest">Tron (TRC20)</p>
+            </div>
+            <div class="bg-black p-4 rounded-xl border border-white/5">
+                <p class="text-green-500 font-bold mb-1 uppercase text-[9px]">Wallet Address</p>
+                <p class="text-white font-mono text-[10px] break-all leading-relaxed tracking-tighter">TS9AMMyNMZygVfD2NAUeYn7N8sq36ivhLJ</p>
+            </div>
+            <div class="bg-black p-4 rounded-xl border border-white/5">
+                <p class="text-yellow-500 font-bold mb-1 uppercase text-[9px]">Binance Pay ID</p>
+                <p class="text-white font-black">157909700</p>
+            </div>
+        </div>
+        <input id="tid" type="text" placeholder="Enter Transaction ID (TxID)" class="w-full bg-black border border-white/10 p-4 rounded-xl mb-4 text-white text-xs font-bold outline-none focus:border-yellow-500">
+        <button onclick="alert('Verification started! Admin will approve soon.'); closeM('depM')" class="w-full bg-yellow-500 text-black font-black p-4 rounded-xl uppercase text-xs tracking-widest shadow-lg">Verify Transaction</button>
+        <button onclick="closeM('depM')" class="w-full mt-4 text-gray-600 text-[10px] font-bold uppercase text-center">Go Back</button>
+    </div></div>
+
+    <div id="kycM" class="modal"><div class="glass w-full max-w-sm border-t-4 border-yellow-500">
+        <h3 class="text-yellow-500 font-black mb-6 text-center italic uppercase">Identity Verification</h3>
+        <input type="text" placeholder="Full Name" class="w-full bg-black border border-white/10 p-4 rounded-xl mb-3 text-white text-sm font-bold outline-none">
+        <input type="text" placeholder="ID Number" class="w-full bg-black border border-white/10 p-4 rounded-xl mb-4 text-white text-sm font-bold outline-none">
+        <button onclick="submitKYC()" class="w-full bg-yellow-500 text-black font-black p-4 rounded-xl uppercase text-xs">Submit KYC</button>
+        <button onclick="closeM('kycM')" class="w-full mt-4 text-gray-600 text-[10px] font-bold uppercase text-center">Cancel</button>
+    </div></div>
+
+    <div id="withM" class="modal"><div class="glass w-full max-w-sm border-t-4 border-red-500">
+        <h3 class="text-red-500 font-black mb-6 text-center italic uppercase">Withdraw Funds</h3>
+        <input type="number" placeholder="Amount (USDT)" class="w-full bg-black border border-white/10 p-4 rounded-xl mb-3 text-white text-sm font-bold outline-none">
+        <input type="text" placeholder="Your Wallet Address" class="w-full bg-black border border-white/10 p-4 rounded-xl mb-4 text-white text-sm font-bold outline-none">
+        <button onclick="alert('Balance insufficient for withdrawal!'); closeM('withM')" class="w-full bg-red-600 text-white font-black p-4 rounded-xl uppercase text-xs">Request Payout</button>
+        <button onclick="closeM('withM')" class="w-full mt-4 text-gray-600 text-[10px] font-bold uppercase text-center">Close</button>
+    </div></div>
+
+    <div id="auth" class="fixed inset-0 bg-[#0b0e11] z-[9999] flex items-center justify-center p-6 hidden">
+        <div class="glass w-full max-w-sm text-center border-b-4 border-yellow-500">
+            <h2 class="text-yellow-500 font-black mb-8 italic uppercase tracking-widest text-xl">Member Login</h2>
+            <input id="uIn" type="text" placeholder="Username" class="w-full bg-black border border-white/10 p-5 rounded-2xl mb-5 text-white font-bold outline-none text-center text-lg">
+            <button onclick="reg()" class="w-full bg-yellow-500 text-black font-black p-5 rounded-2xl uppercase text-xs tracking-widest shadow-xl">Login</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getDatabase, ref, set, onValue, get, update } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
-
         const db = getDatabase(initializeApp({ databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com/" }));
 
+        if(!localStorage.getItem('trader')) document.getElementById('auth').style.display = 'flex';
+        else loginUser(localStorage.getItem('trader'));
+
         window.reg = () => {
-            const n = document.getElementById('uIn').value;
-            if(!n) return;
+            const n = document.getElementById('uIn').value.trim();
+            if(!n) return alert("Enter Name");
             localStorage.setItem('trader', n);
-            set(ref(db, 'users/' + n), { balance: 100 }).then(() => location.reload());
+            set(ref(db, 'users/' + n), { balance: 0.00, kyc: 'Unverified' }).then(() => location.reload());
         };
 
-        const user = localStorage.getItem('trader');
-        if(user) {
-            document.getElementById('loginSection').classList.add('hidden');
-            document.getElementById('tradeSection').classList.remove('hidden');
-            onValue(ref(db, 'users/' + user + '/balance'), (s) => {
-                document.getElementById('bal').innerText = s.val();
+        function loginUser(n) {
+            document.getElementById('uName').innerText = n;
+            document.getElementById('ref').innerText = n.substring(0,3).toUpperCase() + "786";
+            onValue(ref(db, 'users/' + n), (s) => {
+                const data = s.val() || { balance: 0, kyc: 'Unverified' };
+                document.getElementById('bal1').innerText = parseFloat(data.balance).toFixed(2);
+                document.getElementById('bal2').innerText = parseFloat(data.balance).toFixed(2);
+                const ks = data.kyc || 'Unverified';
+                document.getElementById('kycStatus').innerText = ks;
+                document.getElementById('kycStatus').className = `inline-block mt-2 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${ks === 'Verified' ? 'bg-green-500/20 text-green-500 border-green-500/30' : (ks === 'Pending' ? 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30' : 'bg-red-500/20 text-red-500 border-red-500/30')}`;
             });
         }
 
+        window.submitKYC = () => {
+            update(ref(db, 'users/' + localStorage.getItem('trader')), { kyc: 'Pending' });
+            alert("Sent!"); closeM('kycM');
+        };
+
+        window.showTab = (id, el) => {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('tab-active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('tab-active'); el.classList.add('active');
+        };
+
+        window.openM = (id) => document.getElementById(id).style.display = 'flex';
+        window.closeM = (id) => document.getElementById(id).style.display = 'none';
+
+        let busy = false;
         window.trade = (type) => {
+            if(busy) return;
             const u = localStorage.getItem('trader');
-            alert("Trade started! Admin controls result.");
+            get(ref(db, 'users/' + u + '/balance')).then(s => {
+                let b = parseFloat(s.val() || 0);
+                if(b < 5) return alert("Min Trade $5");
+                busy = true; update(ref(db, 'users/' + u), { balance: b - 5 });
+                let t = 60;
+                const i = setInterval(() => {
+                    t--; document.getElementById('timer').innerText = "00:" + (t < 10 ? '0' : '') + t;
+                    if(t <= 0) {
+                        clearInterval(i);
+                        get(ref(db, 'admin/settings/mode')).then(m => {
+                            let win = m.val() === 'win' ? true : (m.val() === 'loss' ? false : Math.random() > 0.5);
+                            if(win) { update(ref(db, 'users/' + u), { balance: (b-5) + 9.5 }); alert("TRADE WIN!"); }
+                            else alert("TRADE LOSS!");
+                            busy = false; document.getElementById('timer').innerText = "01:00";
+                        });
+                    }
+                }, 1000);
+            });
         };
     </script>
 </body>
