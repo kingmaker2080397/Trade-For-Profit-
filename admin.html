@@ -2,117 +2,61 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Admin | Trade For Profit</title>
+    <title>TFP | Admin Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background: #0b0e11; color: white; font-family: sans-serif; }
-        .card { background: #181a20; border: 1px solid #2b2f36; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-        input { background: #0b0e11 !important; border: 1px solid #2b2f36 !important; color: white !important; padding: 8px; border-radius: 5px; outline: none; }
+        body { background: #0b0e11; color: white; font-family: sans-serif; padding: 20px; }
+        .card { background: #181a20; border: 1px solid #2b2f36; border-radius: 12px; padding: 15px; margin-bottom: 10px; }
+        input { background: #0b0e11 !important; border: 1px solid #2b2f36 !important; color: white !important; padding: 4px; border-radius: 4px; width: 60px; }
     </style>
 </head>
-<body class="p-4 md:p-10">
-
-    <div class="max-w-5xl mx-auto">
-        <h1 class="text-3xl font-black text-yellow-500 mb-8 italic uppercase"><i class="fa fa-user-gear mr-2"></i> Super Admin Panel</h1>
-
-        <div class="card grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-                <p class="text-gray-500 text-xs font-bold mb-2 uppercase">Global Trade Result</p>
-                <select id="globalMode" onchange="updateGlobalMode(this.value)" class="w-full bg-black border border-gray-700 p-3 rounded text-sm font-bold">
-                    <option value="random">Random (Natural)</option>
-                    <option value="win">Force WIN (All Users)</option>
-                    <option value="loss">Force LOSS (All Users)</option>
-                </select>
-            </div>
-            <div class="md:col-span-2">
-                <p class="text-gray-500 text-xs font-bold mb-2 uppercase">Quick Status</p>
-                <div class="flex gap-4">
-                    <div class="bg-blue-900/20 p-3 rounded-xl border border-blue-500/30 flex-1">
-                        <p class="text-[10px]">Total Users</p>
-                        <p id="totalUsers" class="text-xl font-bold">0</p>
-                    </div>
-                    <div class="bg-green-900/20 p-3 rounded-xl border border-green-500/30 flex-1">
-                        <p class="text-[10px]">Active Trades</p>
-                        <p class="text-xl font-bold italic">LIVE</p>
-                    </div>
-                </div>
-            </div>
+<body>
+    <h1 class="text-xl font-black text-yellow-500 mb-8 italic uppercase italic border-b border-gray-800 pb-4">Master Admin Control</h1>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div>
+            <h2 class="text-xs font-bold text-gray-500 mb-4 uppercase tracking-widest">Traders & Referrals</h2>
+            <div id="userList"></div>
         </div>
-
-        <h2 class="text-xl font-bold mb-4 text-gray-400 uppercase tracking-widest text-sm">User Management</h2>
-        <div id="userList" class="space-y-4">
-            <p class="text-gray-600 animate-pulse text-center">Fetching users data...</p>
+        <div>
+            <h2 class="text-xs font-bold text-green-500 mb-4 uppercase tracking-widest">Pending Requests</h2>
+            <div id="reqList"></div>
+        </div>
+        <div>
+            <h2 class="text-xs font-bold text-blue-500 mb-4 uppercase tracking-widest">Market Status</h2>
+            <div class="card italic text-center py-10">Server Online <span class="text-green-500">●</span></div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getDatabase, ref, onValue, update, set } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
-        
+        import { getDatabase, ref, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
         const db = getDatabase(initializeApp({ databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com/" }));
 
-        // Global Mode Change
-        window.updateGlobalMode = (val) => {
-            set(ref(db, 'admin/settings/mode'), val);
-            alert("Global mode set to: " + val);
-        };
-
-        // Load Users
-        onValue(ref(db, 'users'), (snapshot) => {
-            const users = snapshot.val();
-            const container = document.getElementById('userList');
-            container.innerHTML = '';
-            let count = 0;
-
-            for (let name in users) {
-                count++;
-                const u = users[name];
-                const kycColor = u.kyc === 'Verified' ? 'text-green-500' : (u.kyc === 'Pending' ? 'text-yellow-500' : 'text-red-500');
-                
-                const card = document.createElement('div');
-                card.className = 'card border-l-4 ' + (u.kyc === 'Pending' ? 'border-yellow-500' : 'border-gray-700');
-                card.innerHTML = `
-                    <div class="flex flex-wrap justify-between items-center gap-4">
-                        <div>
-                            <h3 class="text-lg font-black text-white italic uppercase">${name}</h3>
-                            <p class="text-xs ${kycColor} font-bold">KYC: ${u.kyc || 'Not Verified'}</p>
-                        </div>
-                        
-                        <div class="flex flex-wrap gap-4 items-center">
-                            <div class="text-right">
-                                <p class="text-[10px] text-gray-500 uppercase">Balance</p>
-                                <input type="number" id="bal_${name}" value="${u.balance}" class="w-24 text-center font-bold text-green-500 bg-black">
-                                <button onclick="updateBalance('${name}')" class="bg-green-600 px-2 py-1 rounded text-[10px] font-bold ml-1">SET</button>
-                            </div>
-
-                            <div class="border-l border-gray-800 pl-4">
-                                <p class="text-[10px] text-gray-500 uppercase mb-1">Actions</p>
-                                <button onclick="verifyKYC('${name}', 'Verified')" class="bg-blue-600 px-3 py-1 rounded text-[10px] font-bold mr-1">VERIFY KYC</button>
-                                <button onclick="verifyKYC('${name}', 'Rejected')" class="bg-red-900/50 px-3 py-1 rounded text-[10px] font-bold">REJECT</button>
-                            </div>
-                        </div>
+        onValue(ref(db, 'users'), (s) => {
+            const data = s.val(); const cont = document.getElementById('userList'); cont.innerHTML = '';
+            for(let id in data) {
+                let rCount = 0; for(let k in data) if(data[k].refBy === data[id].myRef) rCount++;
+                cont.innerHTML += `<div class="card">
+                    <p class="font-bold text-sm">${data[id].name} <span class="text-green-500">($${data[id].balance.toFixed(2)})</span></p>
+                    <p class="text-[10px] text-gray-500 mt-1">Refs: ${rCount} | Pass: ${data[id].password}</p>
+                    <div class="mt-3 flex gap-2 border-t border-gray-800 pt-3">
+                        <input type="number" id="b_${id}" placeholder="$">
+                        <button onclick="setB('${id}')" class="bg-green-600 text-[9px] px-2 py-1 rounded">SET</button>
+                        ${rCount >= 10 ? `<button onclick="bonus('${id}')" class="bg-yellow-500 text-black text-[9px] px-2 py-1 rounded">GIVE $5</button>` : ''}
                     </div>
-                `;
-                container.appendChild(card);
+                </div>`;
             }
-            document.getElementById('totalUsers').innerText = count;
         });
 
-        // Functions for buttons
-        window.updateBalance = (name) => {
-            const newBal = document.getElementById('bal_' + name).value;
-            update(ref(db, 'users/' + name), { balance: parseFloat(newBal) });
-            alert(name + " balance updated!");
-        };
+        onValue(ref(db, 'admin'), (s) => {
+            const data = s.val(); const cont = document.getElementById('reqList'); cont.innerHTML = '';
+            if(data?.deposits) for(let k in data.deposits) cont.innerHTML += `<div class="card border-l-4 border-green-500 text-[10px]"><p>DEP: ${data.deposits[k].user}</p><p>TxID: ${data.deposits[k].txid}</p><button onclick="del('deposits','${k}')" class="text-green-500 mt-2">[APPROVE]</button></div>`;
+            if(data?.withdrawals) for(let k in data.withdrawals) cont.innerHTML += `<div class="card border-l-4 border-red-500 text-[10px]"><p>WITH: ${data.withdrawals[k].user}</p><p>$${data.withdrawals[k].amt} (${data.withdrawals[k].method})</p><p>${data.withdrawals[k].adr}</p><button onclick="del('withdrawals','${k}')" class="text-red-500 mt-2">[PAID]</button></div>`;
+        });
 
-        window.verifyKYC = (name, status) => {
-            update(ref(db, 'users/' + name), { kyc: status });
-            alert(name + " KYC status: " + status);
-        };
-
+        window.setB = (id) => update(ref(db, 'users/'+id), { balance: parseFloat(document.getElementById('b_'+id).value) });
+        window.bonus = (id) => get(ref(db, 'users/'+id)).then(s => update(ref(db, 'users/'+id), { balance: s.val().balance + 5 }));
+        window.del = (p,k) => remove(ref(db, `admin/${p}/${k}`));
     </script>
-</bo
-    dy>
-            </html>
+</body>
+</html>
