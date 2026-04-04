@@ -9,26 +9,33 @@
 <body class="bg-gray-900 text-white">
 
     <div id="auth-section" class="flex flex-col items-center justify-center h-screen">
-        <h2 class="text-2xl font-bold mb-4">Welcome to Trade</h2>
-        <input id="email" type="email" placeholder="Email" class="p-2 mb-2 w-64 text-black rounded">
-        <input id="password" type="password" placeholder="Password" class="p-2 mb-2 w-64 text-black rounded">
-        <div class="flex gap-2">
-            <button onclick="handleAuth('login')" class="bg-blue-600 px-4 py-2 rounded">Login</button>
-            <button onclick="handleAuth('signup')" class="bg-green-600 px-4 py-2 rounded">Create Account</button>
+        <h2 class="text-3xl font-bold mb-6 text-green-500">Trade For Profit</h2>
+        <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-80">
+            <input id="email" type="email" placeholder="Email Address" class="p-3 mb-4 w-full text-black rounded focus:outline-none">
+            <input id="password" type="password" placeholder="Password" class="p-3 mb-6 w-full text-black rounded focus:outline-none">
+            <div class="flex flex-col gap-3">
+                <button onclick="handleAuth('login')" class="bg-blue-600 hover:bg-blue-700 p-3 rounded font-bold transition">Login</button>
+                <button onclick="handleAuth('signup')" class="bg-green-600 hover:bg-green-700 p-3 rounded font-bold transition">Create Account</button>
+            </div>
         </div>
     </div>
 
-    <div id="dashboard" class="hidden p-5">
-        <h1 class="text-xl">Balance: <span id="user-balance" class="font-bold text-yellow-400">0</span> PKR</h1>
-        <button onclick="logout()" class="mt-4 bg-red-500 px-3 py-1 rounded text-sm">Logout</button>
+    <div id="dashboard" class="hidden p-6">
+        <div class="flex justify-between items-center mb-10">
+            <h2 class="text-xl font-semibold">User Dashboard</h2>
+            <button onclick="logout()" class="bg-red-500 px-4 py-2 rounded text-sm font-bold">Logout</button>
+        </div>
+        <div class="bg-gray-800 p-8 rounded-2xl text-center shadow-lg border border-gray-700">
+            <p class="text-gray-400 mb-2 uppercase tracking-widest">Available Balance</p>
+            <h1 class="text-5xl font-bold text-yellow-400"><span id="user-balance">0</span> <span class="text-2xl">PKR</span></h1>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-        import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-        // Aapki Firebase ID aur Config
         const firebaseConfig = {
             apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU",
             authDomain: "trade-for-profit-8b160.firebaseapp.com",
@@ -43,22 +50,24 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // Login aur Signup Function
         window.handleAuth = async (type) => {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('password').value;
+            if(!email || !pass) return alert("Please fill all fields");
+
             try {
                 if(type === 'signup') {
                     const res = await createUserWithEmailAndPassword(auth, email, pass);
                     await set(ref(db, 'users/' + res.user.uid), { email: email, balance: 0 });
-                    alert("Account Created!");
+                    alert("Account Created Successfully!");
                 } else {
                     await signInWithEmailAndPassword(auth, email, pass);
                 }
-            } catch (err) { alert(err.message); }
+            } catch (err) { 
+                alert("Error: " + err.message); 
+            }
         };
 
-        // Check Login State
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('auth-section').classList.add('hidden');
@@ -76,4 +85,3 @@
     </script>
 </body>
 </html>
-
