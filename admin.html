@@ -2,14 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin - Trade Control</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kingmaker - Master Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .admin-card { background: rgba(30, 30, 30, 1); border: 1px solid #333; }
+        .status-glow-win { box-shadow: 0 0 15px rgba(34, 197, 94, 0.5); }
+        .status-glow-loss { box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
+    </style>
 </head>
-<body class="bg-gray-800 text-white p-5">
-    <h1 class="text-2xl font-bold mb-5 underline">Admin Control Panel</h1>
-    
-    <div id="user-list" class="space-y-4">
-        <p>Loading users...</p>
+<body class="bg-black text-white p-6">
+
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-black mb-8 text-yellow-500 italic uppercase">Master Control Panel</h1>
+
+        <div class="admin-card p-6 rounded-3xl mb-10">
+            <h2 class="text-sm font-bold text-gray-500 uppercase mb-4 tracking-widest">Global Market Trend</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="setGlobalMode('win')" id="btn-win" class="py-4 rounded-2xl font-black text-xl border-2 border-green-600 text-green-500 hover:bg-green-600 hover:text-black transition">SET ALL WIN</button>
+                <button onclick="setGlobalMode('loss')" id="btn-loss" class="py-4 rounded-2xl font-black text-xl border-2 border-red-600 text-red-500 hover:bg-red-600 hover:text-black transition">SET ALL LOSS</button>
+            </div>
+            <p id="current-mode" class="text-center mt-4 text-xs font-bold text-gray-400">Current Mode: Loading...</p>
+        </div>
+
+        <div class="admin-card p-6 rounded-3xl">
+            <h2 class="text-sm font-bold text-gray-500 uppercase mb-6 tracking-widest">Active Traders</h2>
+            <div id="user-list" class="space-y-4">
+                <p class="text-center text-gray-600 italic">Fetching users...</p>
+            </div>
+        </div>
     </div>
 
     <script type="module">
@@ -29,7 +50,21 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Load All Users
+        // 1. GLOBAL MODE CONTROL
+        window.setGlobalMode = (mode) => {
+            update(ref(db, 'liveSettings'), { status: mode })
+            .then(() => alert("System Updated to: " + mode.toUpperCase()));
+        };
+
+        // Live Mode Watcher
+        onValue(ref(db, 'liveSettings/status'), (snap) => {
+            const mode = snap.val() || "loss";
+            const text = document.getElementById('current-mode');
+            text.innerText = "Current Mode: " + mode.toUpperCase();
+            text.className = mode === 'win' ? "text-center mt-4 text-xs font-black text-green-500 animate-pulse" : "text-center mt-4 text-xs font-black text-red-500 animate-pulse";
+        });
+
+        // 2. FETCH USERS & BALANCE CONTROL
         onValue(ref(db, 'users'), (snapshot) => {
             const users = snapshot.val();
             const listDiv = document.getElementById('user-list');
@@ -38,22 +73,26 @@
             for(let id in users) {
                 const user = users[id];
                 listDiv.innerHTML += `
-                    <div class="bg-gray-700 p-4 rounded flex justify-between items-center">
-                        <div>
-                            <p class="font-bold">${user.email}</p>
-                            <p class="text-green-400">Balance: ${user.balance} PKR</p>
+                    <div class="bg-black/50 p-5 rounded-2xl border border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="text-center md:text-left">
+                            <p class="text-blue-400 font-bold text-sm">${user.email}</p>
+                            <p class="text-xs text-gray-500 font-mono">${id}</p>
+                            <p class="text-xl font-black text-yellow-500 mt-1">RS ${user.balance || 0}</p>
                         </div>
-                        <button onclick="addBalance('${id}', ${user.balance})" class="bg-yellow-600 px-3 py-1 rounded">+ 500 PKR</button>
+                        <div class="flex gap-2">
+                            <button onclick="adjustBalance('${id}', ${user.balance || 0}, 1000)" class="bg-green-600/10 text-green-500 border border-green-600 px-4 py-2 rounded-xl text-xs font-bold">+1000</button>
+                            <button onclick="adjustBalance('${id}', ${user.balance || 0}, -1000)" class="bg-red-600/10 text-red-500 border border-red-600 px-4 py-2 rounded-xl text-xs font-bold">-1000</button>
+                            <button onclick="deleteUser('${id}')" class="bg-gray-800 text-white px-4 py-2 rounded-xl text-xs font-bold">Block</button>
+                        </div>
                     </div>
                 `;
             }
         });
 
-        window.addBalance = (uid, oldBalance) => {
-            const newBalance = oldBalance + 500;
-            update(ref(db, 'users/' + uid), { balance: newBalance });
+        window.adjustBalance = (uid, old, amt) => {
+            update(ref(db, 'users/' + uid), { balance: old + amt });
         };
     </script>
 </body>
-                                                                         </html>
-        
+</html>
+
