@@ -3,258 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trade For Profit | Pro Dashboard</title>
+    <title>Trade For Profit</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        body { background: #0b0e11; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; }
-        .tab-content { display: none; }
-        .active-tab { display: block; }
-        input, select { background: #1e2329 !important; border: 1px solid #2b3139 !important; color: white !important; outline: none; }
-        .btn-buy { background: linear-gradient(to right, #2ebd85, #39d391); }
-        .btn-sell { background: linear-gradient(to right, #f6465d, #ff5f71); }
-    </style>
 </head>
-<body class="max-w-md mx-auto min-h-screen pb-24 shadow-2xl shadow-black">
+<body class="bg-gray-900 text-white">
 
-    <div class="bg-yellow-500/10 py-1 border-b border-yellow-500/20 overflow-hidden">
-        <marquee class="text-[10px] text-yellow-500 font-bold uppercase italic tracking-widest">
-            🔥 User ***992 just received Rs. 24,500 via EasyPaisa | 🚀 SOL/USDT Payout: 88% | 💎 Invite friends and earn $0.5 instantly!
-        </marquee>
-    </div>
-
-    <div id="authSection" class="p-6 mt-10">
-        <div class="glass p-8 border-t-4 border-yellow-500">
-            <h2 id="authTitle" class="text-2xl font-black text-yellow-500 mb-6 uppercase italic tracking-tighter">Login</h2>
-            <input id="authEmail" type="email" placeholder="Email Address" class="w-full p-4 rounded-xl mb-3 text-sm">
-            <input id="authPass" type="password" placeholder="Password" class="w-full p-4 rounded-xl mb-3 text-sm">
-            <div id="regFields" class="hidden">
-                <input id="refCode" type="text" placeholder="Referral Code (Optional)" class="w-full p-4 rounded-xl mb-6 text-sm">
-            </div>
-            <button onclick="handleAuth()" id="authBtn" class="w-full bg-yellow-500 text-black font-bold py-4 rounded-xl uppercase shadow-lg active:scale-95 transition-all">Enter Terminal</button>
-            <p onclick="toggleAuth()" id="authToggle" class="text-center text-[11px] text-gray-500 mt-6 cursor-pointer underline">New Trader? <span class="text-yellow-500">Create Account</span></p>
+    <div id="auth-section" class="flex flex-col items-center justify-center h-screen">
+        <h2 class="text-2xl font-bold mb-4">Welcome to Trade</h2>
+        <input id="email" type="email" placeholder="Email" class="p-2 mb-2 w-64 text-black rounded">
+        <input id="password" type="password" placeholder="Password" class="p-2 mb-2 w-64 text-black rounded">
+        <div class="flex gap-2">
+            <button onclick="handleAuth('login')" class="bg-blue-600 px-4 py-2 rounded">Login</button>
+            <button onclick="handleAuth('signup')" class="bg-green-600 px-4 py-2 rounded">Create Account</button>
         </div>
     </div>
 
-    <div id="appSection" class="hidden">
-        <div class="p-6 flex justify-between items-start">
-            <div>
-                <p class="text-gray-500 text-[9px] font-bold uppercase tracking-[3px]">Total Balance</p>
-                <h1 class="text-3xl font-mono font-bold tracking-tighter">Rs. <span id="balanceDisplay">0.00</span></h1>
-                <p class="text-[9px] text-yellow-500 font-bold mt-1 uppercase italic">≈ $<span id="usdDisplay">0.00</span></p>
-            </div>
-            <div id="kycStatus" class="text-[8px] font-black px-3 py-1 rounded-full border tracking-widest">CHECKING...</div>
-        </div>
-
-        <div id="tradeTab" class="tab-content active-tab px-4">
-            <div class="glass p-2 mb-4">
-                <select id="assetSelect" onchange="changeAsset()" class="w-full p-3 rounded-xl font-bold text-xs">
-                    <optgroup label="🔥 HOT CRYPTO">
-                        <option value="BTCUSDT">BTC / USDT (90% Payout)</option>
-                        <option value="ETHUSDT">ETH / USDT (85% Payout)</option>
-                        <option value="SOLUSDT">SOL / USDT (80% Payout)</option>
-                    </optgroup>
-                    <optgroup label="🏆 COMMODITIES">
-                        <option value="PAXGUSDT">GOLD / XAU (75% Payout)</option>
-                    </optgroup>
-                </select>
-            </div>
-            
-            <div id="chartContainer" class="h-64 glass mb-6 overflow-hidden border border-gray-800"></div>
-
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <button onclick="startTrade('BUY')" class="btn-buy p-5 rounded-2xl font-black uppercase text-sm shadow-lg active:scale-95">Buy / Up</button>
-                <button onclick="startTrade('SELL')" class="btn-sell p-5 rounded-2xl font-black uppercase text-sm shadow-lg active:scale-95">Sell / Down</button>
-            </div>
-
-            <div class="glass p-4">
-                <p class="text-[10px] text-gray-500 font-bold uppercase mb-3">Live Orders</p>
-                <div id="tradeHistory" class="space-y-2 text-[10px]">
-                    <p class="text-gray-700 italic">No active orders...</p>
-                </div>
-            </div>
-        </div>
-
-        <div id="walletTab" class="tab-content px-4 space-y-4">
-            <div class="glass p-4 border-l-4 border-yellow-500 bg-yellow-500/5">
-                <p class="text-[9px] font-bold text-yellow-500 uppercase mb-2">Your Invite Code (Earn $0.5)</p>
-                <div class="flex gap-2">
-                    <input id="myRefCode" readonly class="flex-1 p-2 rounded bg-black/20 text-xs font-mono">
-                    <button onclick="copyRef()" class="bg-yellow-500 text-black px-4 rounded font-bold text-[10px]">COPY</button>
-                </div>
-            </div>
-
-            <div class="glass p-5 border-l-4 border-blue-500 bg-blue-500/5">
-                <h3 class="text-xs font-bold text-blue-500 uppercase mb-4 italic">Internal Transfer</h3>
-                <input id="trEmail" type="email" placeholder="Recipient Email" class="w-full p-3 rounded-lg text-xs mb-2">
-                <input id="trAmt" type="number" placeholder="Amount (Min Rs. 300)" class="w-full p-3 rounded-lg text-xs mb-4">
-                <button onclick="processTransfer()" class="w-full bg-blue-600 py-3 rounded-xl font-bold text-xs uppercase shadow-lg">Send PKR</button>
-            </div>
-
-            <div class="glass p-5 border-l-4 border-red-500 bg-red-500/5">
-                <h3 class="text-xs font-bold text-red-500 uppercase mb-4 italic">Withdraw (Petrol)</h3>
-                <select id="witMethod" class="w-full p-3 rounded-lg text-xs mb-2">
-                    <option>EasyPaisa</option>
-                    <option>JazzCash</option>
-                </select>
-                <input id="witAcc" type="text" placeholder="Account Number" class="w-full p-3 rounded-lg text-xs mb-2">
-                <input id="witAmt" type="number" placeholder="Amount (Min Rs. 1000)" class="w-full p-3 rounded-lg text-xs mb-4">
-                <button onclick="processWithdraw()" class="w-full bg-red-600 py-3 rounded-xl font-bold text-xs uppercase shadow-lg">Request Payout</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="navBar" class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#161a1e]/90 backdrop-blur-md border-t border-gray-800 flex justify-around p-4 hidden">
-        <button onclick="showTab('tradeTab')" class="text-gray-500 hover:text-yellow-500 flex flex-col items-center gap-1">
-            <i class="fa fa-chart-line text-lg"></i><span class="text-[9px] font-bold">TRADE</span>
-        </button>
-        <button onclick="showTab('walletTab')" class="text-gray-500 hover:text-yellow-500 flex flex-col items-center gap-1">
-            <i class="fa fa-wallet text-lg"></i><span class="text-[9px] font-bold">WALLET</span>
-        </button>
+    <div id="dashboard" class="hidden p-5">
+        <h1 class="text-xl">Balance: <span id="user-balance" class="font-bold text-yellow-400">0</span> PKR</h1>
+        <button onclick="logout()" class="mt-4 bg-red-500 px-3 py-1 rounded text-sm">Logout</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getDatabase, ref, set, get, onValue, update, runTransaction, push } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+        import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-        // 🔥 FIREBASE CONFIG
+        // Aapki Firebase ID aur Config
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_DOMAIN",
-            databaseURL: "YOUR_URL",
-            projectId: "YOUR_ID",
-            storageBucket: "YOUR_BUCKET",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU",
+            authDomain: "trade-for-profit-8b160.firebaseapp.com",
+            databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com",
+            projectId: "trade-for-profit-8b160",
+            storageBucket: "trade-for-profit-8b160.firebasestorage.app",
+            messagingSenderId: "1077014018991",
+            appId: "1:1077014018991:web:24f051595ac36857fd4d5a"
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
         const auth = getAuth(app);
+        const db = getDatabase(app);
 
-        let userEmail, userKey, userBalance, kycStatus, isSignup = false;
-
-        // --- AUTH & REFERRAL LOGIC ---
-        window.toggleAuth = () => {
-            isSignup = !isSignup;
-            document.getElementById('authTitle').innerText = isSignup ? "Sign Up" : "Login";
-            document.getElementById('regFields').classList.toggle('hidden', !isSignup);
-        };
-
-        window.handleAuth = async () => {
-            const email = document.getElementById('authEmail').value;
-            const pass = document.getElementById('authPass').value;
-            const refCode = document.getElementById('refCode').value.trim();
-
+        // Login aur Signup Function
+        window.handleAuth = async (type) => {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
             try {
-                if(isSignup) {
+                if(type === 'signup') {
                     const res = await createUserWithEmailAndPassword(auth, email, pass);
-                    const newKey = email.replace(/\./g, '_');
-                    await set(ref(db, 'users/' + newKey), {
-                        email: email, balance: 0, kyc: "Pending", refBy: refCode || "None"
-                    });
-                    
-                    // $0.5 Referral Bonus Logic
-                    if(refCode) {
-                        const rRef = ref(db, 'users/' + refCode.replace(/\./g, '_'));
-                        runTransaction(rRef, (d) => { if(d) d.balance += 0.5; return d; });
-                    }
-                } else { await signInWithEmailAndPassword(auth, email, pass); }
-            } catch(e) { Swal.fire("Auth Error", e.message, "error"); }
+                    await set(ref(db, 'users/' + res.user.uid), { email: email, balance: 0 });
+                    alert("Account Created!");
+                } else {
+                    await signInWithEmailAndPassword(auth, email, pass);
+                }
+            } catch (err) { alert(err.message); }
         };
 
+        // Check Login State
         onAuthStateChanged(auth, (user) => {
-            if(user) {
-                userEmail = user.email;
-                userKey = userEmail.replace(/\./g, '_');
-                document.getElementById('authSection').classList.add('hidden');
-                document.getElementById('appSection').classList.remove('hidden');
-                document.getElementById('navBar').classList.remove('hidden');
-                document.getElementById('myRefCode').value = userEmail;
-                loadData();
-                changeAsset();
+            if (user) {
+                document.getElementById('auth-section').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                onValue(ref(db, 'users/' + user.uid + '/balance'), (snapshot) => {
+                    document.getElementById('user-balance').innerText = snapshot.val() || 0;
+                });
+            } else {
+                document.getElementById('auth-section').classList.remove('hidden');
+                document.getElementById('dashboard').classList.add('hidden');
             }
         });
 
-        function loadData() {
-            onValue(ref(db, 'users/' + userKey), (s) => {
-                const d = s.val();
-                userBalance = d.balance || 0;
-                kycStatus = d.kyc;
-                document.getElementById('balanceDisplay').innerText = (userBalance * 300).toLocaleString();
-                document.getElementById('usdDisplay').innerText = userBalance.toFixed(2);
-                document.getElementById('kycStatus').innerText = kycStatus;
-                document.getElementById('kycStatus').className = `text-[8px] font-black px-3 py-1 rounded-full border tracking-widest ${kycStatus === 'Verified' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`;
-            });
-        }
-
-        // --- ASSET & CHART ---
-        window.changeAsset = () => {
-            new TradingView.widget({
-                "container_id": "chartContainer",
-                "autosize": true,
-                "symbol": "BINANCE:" + document.getElementById('assetSelect').value,
-                "interval": "1", "theme": "dark", "style": "1", "hide_side_toolbar": true, "allow_symbol_change": false,
-            });
-        };
-
-        // --- TRADE LOGIC (MANIPULATION READY) ---
-        window.startTrade = async (type) => {
-            if(userBalance < 1) return Swal.fire("Low Balance", "Min 1 USD required", "warning");
-            
-            // Get Admin Mode
-            const modeSnap = await get(ref(db, 'liveSettings/adminMode'));
-            const mode = modeSnap.val() || 'random';
-
-            Swal.fire({ title: 'Opening ' + type, html: 'Trade closing in <b>60</b>s', timer: 60000, timerProgressBar: true, didOpen: () => Swal.showLoading() });
-
-            setTimeout(async () => {
-                let win = mode === 'win' ? true : (mode === 'loss' ? false : Math.random() > 0.5);
-                
-                await runTransaction(ref(db, 'users/' + userKey), (d) => {
-                    if(d) d.balance += win ? 0.75 : -1;
-                    return d;
-                });
-
-                Swal.fire(win ? "WIN!" : "LOSS", win ? "You earned 75% profit" : "Market moved against you", win ? "success" : "error");
-            }, 60000);
-        };
-
-        // --- WALLET ACTIONS ---
-        window.processTransfer = async () => {
-            const email = document.getElementById('trEmail').value;
-            const amt = parseFloat(document.getElementById('trAmt').value) / 300;
-            if(userBalance < amt) return Swal.fire("Error", "Insufficient Balance", "error");
-            
-            const targetKey = email.replace(/\./g, '_');
-            await runTransaction(ref(db, 'users/' + userKey), (d) => { if(d) d.balance -= amt; return d; });
-            await runTransaction(ref(db, 'users/' + targetKey), (d) => { if(d) d.balance += amt; return d; });
-            Swal.fire("Sent!", "Transfer Successful", "success");
-        };
-
-        window.processWithdraw = async () => {
-            const amt = parseFloat(document.getElementById('witAmt').value);
-            if(kycStatus !== 'Verified') return Swal.fire("KYC Required", "Verify from Admin first", "error");
-            if(userBalance < (amt/300)) return Swal.fire("Error", "Not enough balance", "error");
-
-            await runTransaction(ref(db, 'users/' + userKey), (d) => { if(d) d.balance -= (amt/300); return d; });
-            await push(ref(db, 'withdrawals'), { user: userKey, amountPKR: amt, status: 'Pending', method: document.getElementById('witMethod').value, accNo: document.getElementById('witAcc').value });
-            Swal.fire("Frozen", "Request sent to Admin", "info");
-        };
-
-        window.showTab = (id) => {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
-            document.getElementById(id).classList.add('active-tab');
-        };
-        window.copyRef = () => {
-            navigator.clipboard.writeText(userEmail);
-            Swal.fire({ title: "Copied!", icon: "success", toast: true, position: "top-end", showConfirmButton: false, timer: 1000 });
-        };
+        window.logout = () => signOut(auth);
     </script>
 </body>
-                </html>
-    
+</html>
+
