@@ -3,55 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Multi-Asset Terminal</title>
+    <title>G-Terminal Mobile</title>
     <style>
         :root {
-            --bg: #05070a;
-            --card: #12151c;
+            --bg: #0b0e11;
+            --card: #1e2329;
             --accent: #00f2ff;
-            --green: #00ff88;
-            --red: #ff3e3e;
+            --green: #02c076;
+            --red: #f6465d;
             --text: #ffffff;
-            --text-dim: #848e9c;
         }
 
         body {
             background-color: var(--bg);
             color: var(--text);
-            font-family: 'Inter', sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             margin: 0;
-            overflow-x: hidden;
+            padding: 0;
         }
 
         .navbar {
-            padding: 15px 30px;
+            padding: 15px;
             background: var(--card);
-            border-bottom: 1px solid #2d333b;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid #2b3139;
         }
 
+        /* Mobile Responsive Grid */
         .main-container {
             display: grid;
-            grid-template-columns: 350px 1fr 300px;
-            gap: 15px;
-            padding: 15px;
-            height: calc(100vh - 80px);
+            grid-template-columns: 1fr; /* Default for Mobile */
+            gap: 10px;
+            padding: 10px;
         }
 
-        /* Market Watch Section */
-        .market-watch {
+        /* Desktop view over 900px */
+        @media (min-width: 900px) {
+            .main-container {
+                grid-template-columns: 300px 1fr 300px;
+                height: calc(100vh - 70px);
+            }
+        }
+
+        .box {
             background: var(--card);
             border-radius: 12px;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
         }
 
         .tabs {
             display: flex;
-            background: #1c2128;
+            background: #2b3139;
         }
 
         .tab-btn {
@@ -59,144 +65,94 @@
             padding: 12px;
             border: none;
             background: none;
-            color: var(--text-dim);
+            color: #848e9c;
             cursor: pointer;
-            font-size: 0.8rem;
             font-weight: bold;
-            transition: 0.3s;
         }
 
         .tab-btn.active {
             color: var(--accent);
-            background: var(--card);
             border-bottom: 2px solid var(--accent);
+            background: var(--card);
         }
 
         .asset-list {
+            max-height: 300px;
             overflow-y: auto;
-            flex-grow: 1;
         }
 
         .asset-item {
             display: flex;
             justify-content: space-between;
-            padding: 12px 15px;
-            border-bottom: 1px solid #1c2128;
-            transition: 0.2s;
-            cursor: pointer;
+            padding: 12px;
+            border-bottom: 1px solid #2b3139;
         }
 
-        .asset-item:hover { background: #1c2128; }
-
-        .price-up { color: var(--green); }
-        .price-down { color: var(--red); }
-
-        /* Chart Section */
-        .chart-box {
-            background: var(--card);
-            border-radius: 12px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+        .chart-container {
+            height: 400px; /* Specific height for mobile */
         }
 
-        /* Order Panel */
-        .order-panel {
-            background: var(--card);
-            border-radius: 12px;
-            padding: 20px;
+        @media (min-width: 900px) {
+            .chart-container { height: auto; flex-grow: 1; }
+            .asset-list { max-height: none; }
         }
+
+        .order-panel { padding: 20px; }
 
         .btn-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
-            margin-top: 20px;
+            margin-top: 15px;
         }
 
         .btn {
-            padding: 12px;
+            padding: 15px;
             border-radius: 8px;
             border: none;
             font-weight: bold;
-            cursor: pointer;
+            color: white;
         }
 
-        .buy { background: var(--green); color: #000; }
-        .sell { background: var(--red); color: #fff; }
+        .buy { background: var(--green); }
+        .sell { background: var(--red); }
 
         input {
             width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            background: #1c2128;
-            border: 1px solid #2d333b;
+            padding: 12px;
+            margin-top: 8px;
+            background: #2b3139;
+            border: 1px solid #474d57;
             color: white;
-            border-radius: 5px;
+            border-radius: 4px;
             box-sizing: border-box;
         }
-
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #2d333b; }
     </style>
 </head>
 <body>
 
     <div class="navbar">
-        <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent);">G-TERMINAL</div>
-        <div style="color: var(--green);">● Market Online</div>
+        <div style="font-weight: bold; color: var(--accent);">G-TERMINAL</div>
+        <div style="font-size: 0.8rem; color: var(--green);">● Online</div>
     </div>
 
     <div class="main-container">
-        <div class="market-watch">
+        <div class="box">
             <div class="tabs">
-                <button class="tab-btn active">CRYPTO</button>
-                <button class="tab-btn">FOREX</button>
-                <button class="tab-btn">METALS</button>
+                <button class="tab-btn active" onclick="loadAssets('crypto')">CRYPTO</button>
+                <button class="tab-btn" onclick="loadAssets('forex')">FOREX</button>
+                <button class="tab-btn" onclick="loadAssets('metals')">METALS</button>
             </div>
-            <div class="asset-list" id="assetList">
-                </div>
+            <div class="asset-list" id="assetList"></div>
         </div>
 
-        <div class="chart-box">
-            <div style="padding: 10px; background: #1c2128; font-size: 0.9rem;">
-                Live Analysis: <span id="activePair">BTCUSDT</span>
-            </div>
-            <div id="tradingview_widget" style="flex-grow: 1;"></div>
-            <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-            <script type="text/javascript">
-                new TradingView.widget({
-                    "autosize": true,
-                    "symbol": "BINANCE:BTCUSDT",
-                    "interval": "D",
-                    "timezone": "Etc/UTC",
-                    "theme": "dark",
-                    "style": "1",
-                    "locale": "en",
-                    "toolbar_bg": "#f1f3f6",
-                    "enable_publishing": false,
-                    "hide_side_toolbar": false,
-                    "allow_symbol_change": true,
-                    "container_id": "tradingview_widget"
-                });
-            </script>
+        <div class="box chart-container" id="chart-box">
+            <div id="tradingview_widget" style="height: 100%;"></div>
         </div>
 
-        <div class="order-panel">
-            <h3 style="margin-top: 0;">Quick Execution</h3>
-            <label>Order Type</label>
-            <select style="width: 100%; background: #1c2128; color: white; padding: 10px; border-radius: 5px; border: 1px solid #2d333b;">
-                <option>Market Order</option>
-                <option>Limit Order</option>
-            </select>
-
-            <label style="display: block; margin-top: 15px;">Size (Units)</label>
-            <input type="number" value="1.00">
-
-            <div style="margin-top: 10px; font-size: 0.8rem; color: var(--text-dim);">
-                Margin: $240.50 | Balance: $10,000
-            </div>
-
+        <div class="box order-panel">
+            <h4 style="margin: 0 0 10px 0;">Trade Instantly</h4>
+            <input type="number" placeholder="Amount (USDT)">
             <div class="btn-group">
                 <button class="btn buy">BUY</button>
                 <button class="btn sell">SELL</button>
@@ -204,7 +160,45 @@
         </div>
     </div>
 
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
+        // Real TradingView Widget
+        new TradingView.widget({
+            "autosize": true,
+            "symbol": "BINANCE:BTCUSDT",
+            "interval": "H",
+            "theme": "dark",
+            "style": "1",
+            "locale": "en",
+            "container_id": "tradingview_widget",
+            "hide_top_toolbar": true,
+            "hide_legend": true
+        });
+
         const assets = {
-            crypto: ["BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "XRP/USDT", "ADA/USDT", "DOGE/USDT
+            crypto: ["BTC/USDT", "ETH/USDT", "SOL/USDT", "XRP/USDT", "BNB/USDT"],
+            forex: ["EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD", "USD/CAD"],
+            metals: ["GOLD", "SILVER", "OIL", "GAS", "COPPER"]
+        };
+
+        function loadAssets(type) {
+            const list = document.getElementById('assetList');
+            list.innerHTML = '';
+            
+            // Tab highlight logic
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            assets[type].forEach(name => {
+                list.innerHTML += `
+                    <div class="asset-item">
+                        <span>${name}</span>
+                        <span style="color: var(--green)">+${(Math.random()*3).toFixed(2)}%</span>
+                    </div>`;
+            });
+        }
+        loadAssets('crypto');
+    </script>
+</body>
+    </html>
         
