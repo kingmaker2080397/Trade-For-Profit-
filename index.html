@@ -3,91 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kingmaker Elite Trade</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Elite Multi-Asset Terminal</title>
     <style>
-        body { background-color: #000; color: #fff; font-family: sans-serif; overflow-x: hidden; }
-        .glass { background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .active-nav { color: #eab308; border-top: 2px solid #eab308; }
-        #tradingview_widget { height: 300px; width: 100%; border-radius: 20px; overflow: hidden; margin-bottom: 15px; }
-        @keyframes slide { from { transform: translateY(-100%); } to { transform: translateY(0); } }
-        .res-card { animation: slide 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        :root {
+            --bg: #05070a;
+            --card: #12151c;
+            --accent: #00f2ff;
+            --green: #00ff88;
+            --red: #ff3e3e;
+            --text: #ffffff;
+            --text-dim: #848e9c;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            padding: 15px 30px;
+            background: var(--card);
+            border-bottom: 1px solid #2d333b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 350px 1fr 300px;
+            gap: 15px;
+            padding: 15px;
+            height: calc(100vh - 80px);
+        }
+
+        /* Market Watch Section */
+        .market-watch {
+            background: var(--card);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            background: #1c2128;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active {
+            color: var(--accent);
+            background: var(--card);
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .asset-list {
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .asset-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 15px;
+            border-bottom: 1px solid #1c2128;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+
+        .asset-item:hover { background: #1c2128; }
+
+        .price-up { color: var(--green); }
+        .price-down { color: var(--red); }
+
+        /* Chart Section */
+        .chart-box {
+            background: var(--card);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Order Panel */
+        .order-panel {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .buy { background: var(--green); color: #000; }
+        .sell { background: var(--red); color: #fff; }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #1c2128;
+            border: 1px solid #2d333b;
+            color: white;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #2d333b; }
     </style>
 </head>
-<body class="pb-24">
+<body>
 
-    <div id="result-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 hidden px-6">
-        <div id="result-box" class="res-card w-full max-w-sm p-10 rounded-[3rem] text-center border-t-8 bg-gray-900 shadow-2xl">
-            <div id="result-icon" class="text-7xl mb-4"></div>
-            <h2 id="result-title" class="text-4xl font-black italic mb-2 uppercase"></h2>
-            <p id="result-amount" class="text-2xl font-bold mb-8"></p>
-            <button onclick="location.reload()" class="w-full bg-white text-black font-black py-4 rounded-2xl uppercase tracking-widest">Trade Again</button>
-        </div>
+    <div class="navbar">
+        <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent);">G-TERMINAL</div>
+        <div style="color: var(--green);">● Market Online</div>
     </div>
 
-    <div class="p-6 glass sticky top-0 z-50 flex justify-between items-center border-b border-gray-800">
-        <div>
-            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Main Balance</p>
-            <h1 class="text-3xl font-black text-yellow-500 italic">RS <span id="user-balance">0.00</span></h1>
-        </div>
-        <div class="text-right">
-            <span class="bg-red-600/20 text-red-500 text-[9px] px-3 py-1 rounded-full font-black border border-red-600/30 uppercase">Min Dep: 300</span>
-        </div>
-    </div>
-
-    <div class="p-4">
-        <div id="trade-tab" class="tab-content active">
-            <div class="flex gap-2 mb-4 overflow-x-auto no-scrollbar pb-2">
-                <button onclick="changeAsset('BINANCE:BTCUSDT')" class="bg-yellow-600 text-black px-5 py-2 rounded-full text-[10px] font-black uppercase">BTC</button>
-                <button onclick="changeAsset('BINANCE:ETHUSDT')" class="bg-gray-800 px-5 py-2 rounded-full text-[10px] font-black uppercase">ETH</button>
-                <button onclick="changeAsset('OANDA:XAUUSD')" class="bg-gray-800 px-5 py-2 rounded-full text-[10px] font-black uppercase">GOLD</button>
+    <div class="main-container">
+        <div class="market-watch">
+            <div class="tabs">
+                <button class="tab-btn active">CRYPTO</button>
+                <button class="tab-btn">FOREX</button>
+                <button class="tab-btn">METALS</button>
             </div>
-
-            <div class="relative">
-                <div id="tradingview_widget"></div>
-                <div id="trade-entry-line" class="hidden absolute left-0 right-0 z-10 border-t-2 border-dashed border-yellow-500 flex justify-end items-center" style="top: 50%;">
-                    <span class="bg-yellow-500 text-black text-[8px] font-black px-2 py-0.5 rounded-l uppercase">Entry Point</span>
+            <div class="asset-list" id="assetList">
                 </div>
-            </div>
-
-            <div id="timer-box" class="hidden bg-yellow-500/10 border border-yellow-500/30 p-4 rounded-3xl mb-6 text-center animate-pulse">
-                <h2 id="countdown" class="text-5xl font-mono font-black text-white">00:60</h2>
-            </div>
-
-            <div class="bg-gray-900 p-6 rounded-[2.5rem] mb-6 border border-gray-800">
-                <p class="text-[10px] text-gray-500 font-black mb-2 uppercase">Amount (PKR)</p>
-                <input id="trade-amount" type="number" value="500" class="w-full bg-transparent text-5xl font-black outline-none border-b border-gray-800 pb-2">
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <button onclick="initTrade('Up')" class="bg-green-600 h-44 rounded-[2.5rem] font-black text-4xl border-b-8 border-green-800 active:scale-95 transition-all shadow-xl shadow-green-900/30">UP ↑</button>
-                <button onclick="initTrade('Down')" class="bg-red-600 h-44 rounded-[2.5rem] font-black text-4xl border-b-8 border-red-800 active:scale-95 transition-all shadow-xl shadow-red-900/30">DOWN ↓</button>
-            </div>
         </div>
 
-        <div id="deposit-tab" class="tab-content">
-            <h2 class="text-xl font-black mb-6 text-yellow-500 italic uppercase text-center">Deposit Hub</h2>
-            <div class="bg-gray-900 p-6 rounded-[2.5rem] border border-gray-800">
-                <select id="method-selector" onchange="updateDepositUI()" class="w-full bg-black p-4 rounded-2xl mb-6 border border-gray-700 font-bold text-yellow-500 outline-none">
-                    <option value="none">--- Select Payment ---</option>
-                    <option value="ep">Easypaisa</option>
-                    <option value="jc">JazzCash</option>
-                    <option value="usdt">USDT (TRC20)</option>
-                </select>
+        <div class="chart-box">
+            <div style="padding: 10px; background: #1c2128; font-size: 0.9rem;">
+                Live Analysis: <span id="activePair">BTCUSDT</span>
+            </div>
+            <div id="tradingview_widget" style="flex-grow: 1;"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+            <script type="text/javascript">
+                new TradingView.widget({
+                    "autosize": true,
+                    "symbol": "BINANCE:BTCUSDT",
+                    "interval": "D",
+                    "timezone": "Etc/UTC",
+                    "theme": "dark",
+                    "style": "1",
+                    "locale": "en",
+                    "toolbar_bg": "#f1f3f6",
+                    "enable_publishing": false,
+                    "hide_side_toolbar": false,
+                    "allow_symbol_change": true,
+                    "container_id": "tradingview_widget"
+                });
+            </script>
+        </div>
 
-                <div id="payment-box" class="hidden bg-black/50 p-6 rounded-3xl border border-dashed border-gray-700 text-center mb-6">
-                    <p id="meth-name" class="text-[10px] text-blue-400 font-black uppercase mb-2"></p>
-                    <p id="meth-val" class="text-lg font-black text-white break-all mb-4"></p>
-                    <button onclick="copyAddr()" class="text-[10px] bg-white/10 px-4 py-2 rounded-full border border-white/20 font-bold uppercase">Copy</button>
-                </div>
+        <div class="order-panel">
+            <h3 style="margin-top: 0;">Quick Execution</h3>
+            <label>Order Type</label>
+            <select style="width: 100%; background: #1c2128; color: white; padding: 10px; border-radius: 5px; border: 1px solid #2d333b;">
+                <option>Market Order</option>
+                <option>Limit Order</option>
+            </select>
 
-                <input type="number" id="dep-amt" placeholder="Amount (Min 300)" class="w-full bg-black p-4 rounded-2xl mb-4 border border-gray-700 outline-none">
-                <button onclick="alert('Sent for verification!')" class="w-full bg-blue-600 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-900/40">Confirm Recharge</button>
+            <label style="display: block; margin-top: 15px;">Size (Units)</label>
+            <input type="number" value="1.00">
+
+            <div style="margin-top: 10px; font-size: 0.8rem; color: var(--text-dim);">
+                Margin: $240.50 | Balance: $10,000
+            </div>
+
+            <div class="btn-group">
+                <button class="btn buy">BUY</button>
+                <button class="btn sell">SELL</button>
             </div>
         </div>
     </div>
 
-    <div class="fixed bottom-0 left-0 right-0 glass border-t border-gray-800 p-5 flex justify-around text
-    
+    <script>
+        const assets = {
+            crypto: ["BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "XRP/USDT", "ADA/USDT", "DOGE/USDT
+        
