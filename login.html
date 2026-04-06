@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-Terminal | Login</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <style>
+        body { background: #0b0e11; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: #1e2329; padding: 30px; border-radius: 12px; width: 320px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; background: #2b3139; border: 1px solid #474d57; color: white; border-radius: 5px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; background: #f0b90b; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; }
+    </style>
+</head>
+<body>
+<div class="box">
+    <h2 style="color:#f0b90b; text-align:center;">Login</h2>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="pass" placeholder="Password">
+    <button class="btn" onclick="login()">Login</button>
+</div>
+<script>
+    const firebaseConfig = { apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", authDomain: "trade-for-profit-8b160.firebaseapp.com", databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", projectId: "trade-for-profit-8b160", storageBucket: "trade-for-profit-8b160.firebasestorage.app", messagingSenderId: "1077014018991", appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" };
+    firebase.initializeApp(firebaseConfig);
+    function login() {
+        const e = document.getElementById('email').value;
+        const p = document.getElementById('pass').value;
+        firebase.auth().signInWithEmailAndPassword(e, p)
+        .then(() => { window.location.href = "index.html"; })
+        .catch(err => alert(err.message));
+    }
+</script>
+</body>
+  </html
+    >
