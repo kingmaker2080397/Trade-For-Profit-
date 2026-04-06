@@ -1,66 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <style>
-        body { background: #0b0e11; color: white; font-family: sans-serif; padding: 20px; }
-        .card { background: #1e2329; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #2b3139; }
-        input { padding: 8px; background: #2b3139; border: 1px solid #474d57; color: white; border-radius: 5px; }
-        button { background: #f0b90b; border: none; padding: 8px; cursor: pointer; font-weight: bold; border-radius: 5px; }
-    </style>
-</head>
-<body>
-    <h1>Admin Panel Control</h1>
-    
-    <div class="card">
-        <h3>Global Payment Settings</h3>
-        <input type="text" id="jazz" placeholder="JazzCash Number">
-        <button onclick="update('jazzcash', 'jazz')">Update Jazz</button><br><br>
-        <input type="text" id="ep" placeholder="EasyPaisa Number">
-        <button onclick="update('easypaisa', 'ep')">Update EP</button><br><br>
-        <input type="text" id="usdt" placeholder="USDT TRC20 Address">
-        <button onclick="update('trc20', 'usdt')">Update USDT</button>
-    </div>
-
-    <div class="card">
-        <h3>User Management</h3>
-        <table id="userTable" border="1" style="width:100%; text-align:left;">
-            <tr><th>Name</th><th>Balance</th><th>Control</th><th>Action</th></tr>
-        </table>
-    </div>
+<div class="card">
+    <h3>Pending KYC Approvals</h3>
+    <table id="kycTable" border="1" style="width:100%; text-align:left; border-collapse: collapse;">
+        <tr style="background:#2b3139;">
+            <th>Name</th>
+            <th>CNIC</th>
+            <th>Image</th>
+            <th>Action</th>
+        </tr>
+    </table>
+</div>
 
 <script>
-    const firebaseConfig = { apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", authDomain: "trade-for-profit-8b160.firebaseapp.com", databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", projectId: "trade-for-profit-8b160", storageBucket: "trade-for-profit-8b160.firebasestorage.app", messagingSenderId: "1077014018991", appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    function update(method, id) {
-        const v = document.getElementById(id).value;
-        db.ref('admin_settings/payments/' + method).set(v).then(() => alert("Updated!"));
-    }
-
-    db.ref('users').on('value', snap => {
-        const table = document.getElementById('userTable');
-        table.innerHTML = '<tr><th>Name</th><th>Balance</th><th>Control</th><th>Action</th></tr>';
+    // KYC Table Loading
+    db.ref('users').orderByChild('kyc_status').equalTo('PENDING').on('value', snap => {
+        const table = document.getElementById('kycTable');
+        table.innerHTML = '<tr style="background:#2b3139;"><th>Name</th><th>CNIC</th><th>Image</th><th>Action</th></tr>';
+        
         snap.forEach(user => {
-            const u = user.val();
-            const id = user.key;
-            table.innerHTML += `<tr>
-                <td>${u.name}</td>
-                <td>$${u.balance}</td>
-                <td>${u.control}</td>
-                <td><button onclick="setForce('${id}', 'WIN')">Win</button> <button onclick="setForce('${id}', 'LOSS')">Loss</button></td>
-            </tr>`;
+            const d = user.val();
+            const uid = user.key;
+            table.innerHTML += `
+                <tr>
+                    <td>${d.kyc_data.name}</td>
+                    <td>${d.kyc_data.cnic}</td>
+                    <td><a href="${d.kyc_data.image}" target="_blank" style="color:#f0b90b;">View Image</a></td>
+                    <td>
+                        <button onclick="approveKYC('${uid}', 'APPROVED')" style="background:#02c076; color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;">Approve</button>
+                        <button onclick="approveKYC('${uid}', 'REJECTED')" style="background:#f6465d; color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;">Reject</button>
+                    </td>
+                </tr>`;
         });
     });
 
-    function setForce(uid, mode) {
-        db.ref('users/' + uid).update({ control: mode });
+    function approveKYC(uid, status) {
+        db.ref('users/' + uid).update({ kyc_status: status })
+        .then(() => alert("User KYC updated to " + status));
     }
 </script>
-</body>
-                           
-</html>
