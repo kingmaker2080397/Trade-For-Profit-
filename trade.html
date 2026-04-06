@@ -3,107 +3,153 @@
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Trade | G-Terminal</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <style>
-        body { background: #0b0e11; color: white; font-family: sans-serif; margin: 0; padding: 10px; }
-        #chart-container { height: 400px; width: 100%; border-radius: 10px; overflow: hidden; border: 1px solid #2b3139; }
-        .controls { background: #1e2329; padding: 20px; border-radius: 15px; margin-top: 15px; }
-        select, input { width: 100%; padding: 12px; margin: 10px 0; background: #2b3139; border: 1px solid #474d57; color: white; border-radius: 8px; }
-        .btn-call { background: #02c076; width: 48%; padding: 15px; border: none; color: white; font-weight: bold; border-radius: 8px; }
-        .btn-put { background: #f6465d; width: 48%; padding: 15px; border: none; color: white; font-weight: bold; border-radius: 8px; }
+        :root { --bg: #0b0e11; --card: #1e2329; --yellow: #f0b90b; --green: #02c076; --red: #f6465d; --text: #ffffff; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 10px; overflow-x: hidden; }
+        #chart-container { height: 350px; width: 100%; background: #161a1e; border: 1px solid #2b3139; border-radius: 12px; position: relative; margin-top: 10px; }
+        .price-display { position: absolute; top: 15px; left: 15px; z-index: 10; font-size: 2rem; font-weight: bold; font-family: monospace; }
+        .controls { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 15px; border: 1px solid #2b3139; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; background: #2b3139; border: 1px solid #474d57; color: white; border-radius: 8px; outline: none; box-sizing: border-box; }
+        .btn-up { background: var(--green); width: 48%; padding: 15px; border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        .btn-down { background: var(--red); width: 48%; padding: 15px; border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        #trade-timer { font-size: 1.5rem; text-align: center; color: var(--yellow); font-weight: bold; margin-bottom: 10px; display: none; }
     </style>
 </head>
 <body>
 
-    <h3 style="text-align: center; color: #f0b90b;">Live Terminal</h3>
-
     <div id="chart-container">
-        <div class="tradingview-widget-container" style="height:100%;width:100%">
-            <div id="tradingview_chart" style="height:100%;width:100%"></div>
-            <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-            <script type="text/javascript">
-                new TradingView.widget({
-                    "autosize": true,
-                    "symbol": "BINANCE:BTCUSDT",
-                    "interval": "1",
-                    "timezone": "Etc/UTC",
-                    "theme": "dark",
-                    "style": "1",
-                    "locale": "en",
-                    "toolbar_bg": "#f1f3f6",
-                    "enable_publishing": false,
-                    "hide_side_toolbar": false,
-                    "allow_symbol_change": true,
-                    "container_id": "tradingview_chart"
-                });
-            </script>
-        </div>
-        </div>
+        <div class="price-display" id="price-text">0.00</div>
+    </div>
 
     <div class="controls">
-        <label>Select Asset (Crypto/Forex/Commodity):</label>
-        <select id="asset-choice">
-            <option value="BINANCE:BTCUSDT">BTC/USDT (Crypto)</option>
-            <option value="FX:EURUSD">EUR/USD (Forex)</option>
-            <option value="OANDA:XAUUSD">GOLD (Commodity)</option>
+        <div id="trade-timer">00:60</div>
+        <select id="asset">
+            <option value="BTC">BTC/USDT</option>
+            <option value="GOLD">GOLD (XAU/USD)</option>
+            <option value="EUR">EUR/USD (Forex)</option>
         </select>
-        
-        <input type="number" id="trade-amt" placeholder="Enter Amount ($)">
-        
-        // Is script ko trade.html ke end mein replace karein
-
-function startTrade(dir) {
-    const user = auth.currentUser;
-    if (!user) return alert("Please Login!");
-
-    const amt = parseFloat(document.getElementById('trade-amt').value);
-    if (isNaN(amt) || amt < 1) return alert("Minimum trade is $1");
-
-    db.ref('users/' + user.uid).once('value', snap => {
-        const userData = snap.val();
-        if (amt > userData.balance) return alert("Insufficient Balance!");
-
-        // 1. Deduct amount initially
-        let tempBal = userData.balance - amt;
-        db.ref('users/' + user.uid).update({ balance: tempBal });
-
-        // 2. Start Timer Logic
-        let duration = 60; // default 1 min
-        let timeLeft = duration;
-        isTradeActive = true;
-        const entryPrice = currentPrice;
-
-        const countdown = setInterval(() => {
-            timeLeft--;
-            // Timer UI update yahan karein
-            if (timeLeft <= 0) {
-                clearInterval(countdown);
-                isTradeActive = false;
-                
-                // 3. Process Result (Manual vs Admin Force)
-                let result = "";
-                if (userData.control === "WIN") result = "WIN";
-                else if (userData.control === "LOSS") result = "LOSS";
-                else {
-                    // Manual Logic
-                    if (dir === 'UP') result = (currentPrice > entryPrice) ? "WIN" : "LOSS";
-                    else result = (currentPrice < entryPrice) ? "WIN" : "LOSS";
-                }
-
-                // 4. Update Final Balance
-                if (result === "WIN") {
-                    let winProfit = amt * 1.85; // 85% Profit + Capital
-                    db.ref('users/' + user.uid).update({ balance: tempBal + winProfit });
-                    alert("Trade WON! Result: WIN");
-                } else {
-                    alert("Trade LOST! Result: LOSS");
-                }
-            }
-        }, 1000);
-    });
-}
-                        
+        <input type="number" id="amount" placeholder="Trade Amount ($)">
+        <div style="display:flex; justify-content: space-between;">
+            <button class="btn-up" onclick="startTrade('UP')">CALL (UP)</button>
+            <button class="btn-down" onclick="startTrade('DOWN')">PUT (DOWN)</button>
+        </div>
     </div>
-    
-                        
+
+<script>
+    // Firebase Config (Replace with yours)
+    const firebaseConfig = {
+        apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU",
+        authDomain: "trade-for-profit-8b160.firebaseapp.com",
+        databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com",
+        projectId: "trade-for-profit-8b160",
+        storageBucket: "trade-for-profit-8b160.firebasestorage.app",
+        messagingSenderId: "1077014018991",
+        appId: "1:1077014018991:web:c41320e2ef10291afd4d5a"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    let currentPrice = 65230.50;
+    let isTradeActive = false;
+    let adminControl = "NORMAL";
+
+    // Initialize Chart
+    const chart = LightweightCharts.createChart(document.getElementById('chart-container'), {
+        layout: { backgroundColor: '#161a1e', textColor: '#d1d4dc' },
+        grid: { vertLines: { color: '#2b3139' }, horzLines: { color: '#2b3139' } },
+        priceScale: { borderColor: '#2b3139' },
+        timeScale: { borderColor: '#2b3139', timeVisible: true }
+    });
+    const lineSeries = chart.addLineSeries({ color: '#02c076', lineWidth: 3 });
+
+    // REAL-TIME MANIPULATION LOGIC
+    setInterval(() => {
+        let move = (Math.random() - 0.5) * 5; // Natural Random Move
+
+        // Apply Admin Jerk if trade is active
+        if (isTradeActive) {
+            if (adminControl === "WIN") move = Math.abs(move) + 2.5; // Always Jerk UP
+            if (adminControl === "LOSS") move = -Math.abs(move) - 2.5; // Always Jerk DOWN
+        }
+
+        currentPrice += move;
+        document.getElementById('price-text').innerText = currentPrice.toFixed(2);
+        document.getElementById('price-text').style.color = move > 0 ? "#02c076" : "#f6465d";
+        
+        lineSeries.update({ time: Math.floor(Date.now() / 1000), value: currentPrice });
+    }, 1000);
+
+    // Sync Admin Control
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            db.ref('users/' + user.uid + '/control').on('value', snap => {
+                adminControl = snap.val() || "NORMAL";
+            });
+        }
+    });
+
+    // START TRADE FIX
+    function startTrade(dir) {
+        const user = auth.currentUser;
+        const amt = parseFloat(document.getElementById('amount').value);
+
+        if(!user) return alert("Please login first!");
+        if(isNaN(amt) || amt < 1) return alert("Enter valid amount!");
+
+        db.ref('users/' + user.uid).once('value', snap => {
+            const userData = snap.val();
+            if (amt > userData.balance) return alert("Insufficient Balance!");
+
+            // 1. Deduct Capital Immediately
+            let initialBal = userData.balance;
+            db.ref('users/' + user.uid).update({ balance: initialBal - amt });
+
+            // 2. Lock UI & Start Timer
+            isTradeActive = true;
+            const entryPrice = currentPrice;
+            let timeLeft = 60;
+            document.getElementById('trade-timer').style.display = "block";
+            
+            const timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('trade-timer').innerText = "Closing in: " + timeLeft + "s";
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    isTradeActive = false;
+                    document.getElementById('trade-timer').style.display = "none";
+                    
+                    finishTrade(user.uid, dir, amt, entryPrice, currentPrice, initialBal);
+                }
+            }, 1000);
+        });
+    }
+
+    function finishTrade(uid, dir, amt, entry, exit, oldTotal) {
+        let isWin = false;
+        
+        if (adminControl === "WIN") isWin = true;
+        else if (adminControl === "LOSS") isWin = false;
+        else {
+            // Normal Logic
+            if (dir === 'UP') isWin = (exit > entry);
+            if (dir === 'DOWN') isWin = (exit < entry);
+        }
+
+        if (isWin) {
+            let winAmount = amt * 1.85; // 85% Profit + Capital
+            db.ref('users/' + uid).update({ balance: (oldTotal - amt) + winAmount });
+            alert("Congratulations! Profit: " + (amt * 0.85).toFixed(2));
+        } else {
+            alert("Trade Lost! Better luck next time.");
+        }
+    }
+</script>
 </body>
 </html>
