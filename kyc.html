@@ -1,19 +1,21 @@
-function submitKYC() {
-    const uid = auth.currentUser.uid;
-    const cnicVal = document.getElementById('cnic_input').value;
-    const docLink = document.getElementById('doc_url').value;
-
-    if(!cnicVal || !docLink) return alert("Please fill all fields!");
-
-    db.ref('users/' + uid).update({
-        kyc_status: "PENDING",
-        kyc_data: {
-            cnic: cnicVal,
-            document: docLink,
-            submitted_at: Date.now()
-        }
-    }).then(() => {
-        alert("KYC Submitted! Admin will review it soon.");
-        window.location.href = "index.html";
-    });
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KYC Verification | G-Terminal</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <style>
+        body { background: #0b0e11; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: #1e2329; padding: 30px; border-radius: 12px; width: 350px; border: 1px solid #2b3139; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; background: #2b3139; border: 1px solid #474d57; color: white; border-radius: 5px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; background: #f0b90b; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; }
+    </style>
+</head>
+<body>
+<div class="box">
+    <h2 style="color:#f0b90b;">KYC Verification</h2>
+    <p style="font-size: 0.8rem; color: #848e9c;">Submit your CNIC details to enable withdrawals.</p>
+    <input type="text" id="cnic_name" placeholder="Name as per CNIC">
+    
