@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Withdraw Funds | G-Terminal</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <style>
+        :root { --bg: #0b0e11; --card: #1e2329; --yellow: #f0b90b; --text: #ffffff; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
+        .box { background: var(--card); padding: 30px; border-radius: 15px; width: 100%; max-width: 400px; border: 1px solid #2b3139; text-align: center; }
+        h2 { color: var(--yellow); margin-bottom: 20px; }
+        .bal-display { background: #000; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--yellow); }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; background: #2b3139; border: 1px solid #474d57; color: white; border-radius: 8px; box-sizing: border-box; }
+        .btn-withdraw { width: 100%; padding: 15px; background: var(--yellow); color: black; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <a href="index.html" style="color: #848e9c; text-decoration: none; font-size: 0.8rem; float: left;">< Back</a>
+    <br>
+    <h2>Withdrawal</h2>
+    
+    <div class="bal-display">
+        <small style="color: #848e9c;">Available Balance</small>
+        <div id="current-bal" style="font-size: 1.5rem; font-weight: bold; color: var(--yellow);">$0.00</div>
+    </div>
+
+    <input type="number" id="w-amount" placeholder="Enter Amount ($)">
+    <select id="w-method">
+        <option value="EasyPaisa">EasyPaisa</option>
+        <option value="JazzCash">JazzCash</option>
+        <option value="USDT">USDT (TRC20)</option>
+    </select>
+    <input type="text" id="w-account" placeholder="Account Number / Address">
+    
+    <button class="btn-withdraw" onclick="requestWithdraw()">Submit Request</button>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU",
+        authDomain: "trade-for-profit-8b160.firebaseapp.com",
+        databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com",
+        projectId: "trade-for-profit-8b160",
+        storageBucket: "trade-for-profit-8b160.firebasestorage.app",
+        messagingSenderId: "1077014018991",
+        appId: "1:1077014018991:web:c41320e2ef10291afd4d5a"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            db.ref('users/' + user.uid).on('value', snap => {
+                const d = snap.val();
+                if (d) {
+                    document.getElementById('current-bal').innerText = "$" + parseFloat(d.balance).toFixed(2);
+                    window.userBal = d.balance;
+                    window.kycStatus = d.kyc_status;
+                }
+            });
+        } else { window.location.href = "login.html"; }
+    });
+
+    function requestWithdraw() {
+        const amt = parseFloat(document.getElementById('w-amount').value);
+        const acc = document.getElementById('w-account').value;
+        const meth = document.getElementById('w-method').value;
+
+        if (window.kycStatus !== "APPROVED") {
+            return alert("Error: Please verify your KYC first!");
+        }
+        if (!amt || amt < 10) {
+            return alert("Minimum withdrawal is $10!");
+        }
+        if (amt > window.userBal) {
+            return alert("Insufficient balance!");
+        }
+        if (!acc) return alert("Please enter account details!");
+
+        const requestData = {
+            uid: auth.currentUser.uid,
+            email: auth.currentUser.email,
+            amount: amt,
+            method: meth,
+            account: acc,
+            status: "PENDING",
+            timestamp: Date.now()
+        };
+
+        // Add to global withdrawals list for Admin
+        db.ref('withdrawals').push(requestData).then(() => {
+            // Deduct balance immediately or wait for admin approval (as per your choice)
+            // Yahan hum sirf request bhej rahe hain
+            alert("Withdrawal request sent! Admin will process it within 24h.");
+            window.location.href = "index.html";
+        });
+    }
+</script>
+
+</body>
+    </html>
+      
