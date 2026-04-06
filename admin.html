@@ -196,7 +196,37 @@
             </table>
         </div>
     </div>
+    <div class="card">
+    <h3>🛠️ Global Payment Settings</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div>
+            <label>JazzCash Number:</label>
+            <input type="text" id="adm_jazz" placeholder="03xx-xxxxxxx">
+            <button onclick="savePay('jazzcash', 'adm_jazz')">Update JazzCash</button>
+        </div>
+        <div>
+            <label>EasyPaisa Number:</label>
+            <input type="text" id="adm_ep" placeholder="03xx-xxxxxxx">
+            <button onclick="savePay('easypaisa', 'adm_ep')">Update EasyPaisa</button>
+        </div>
+        <div>
+            <label>USDT TRC20:</label>
+            <input type="text" id="adm_trc" placeholder="Txxxxxxxx...">
+            <button onclick="savePay('trc20', 'adm_trc')">Update TRC20</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function savePay(method, inputId) {
+    const val = document.getElementById(inputId).value;
+    database.ref('admin_settings/payments/' + method).set(val)
+    .then(() => alert(method + " Updated Successfully!"));
+}
+</script>
+    
 
 </body>
     </html>
+
     
