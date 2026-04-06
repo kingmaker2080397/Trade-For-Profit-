@@ -3,92 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trade Pro - Official Platform</title>
+    <title>Elite Trade Platform</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
         :root { --bg: #0b0e11; --card: #1e2329; --yellow: #fcd535; --green: #0ecb81; --red: #f6465d; --text: #eaecef; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
         
-        /* 1. Fake Ticker Bar */
-        .ticker-wrap { width: 100%; overflow: hidden; background: #181a20; border-bottom: 1px solid #2b2f36; height: 35px; display: flex; align-items: center; z-index: 1001; }
+        /* Professional Ticker */
+        .ticker-wrap { width: 100%; overflow: hidden; background: #181a20; border-bottom: 1px solid #2b2f36; height: 35px; display: flex; align-items: center; }
         .ticker { white-space: nowrap; animation: ticker 40s linear infinite; font-size: 11px; }
         @keyframes ticker { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        .ticker span { margin: 0 30px; color: var(--yellow); font-weight: 500; }
+        .ticker span { margin: 0 30px; color: var(--yellow); font-weight: bold; }
 
-        /* Top Bar */
         .top-bar { display: flex; justify-content: space-between; padding: 15px; background: var(--card); border-bottom: 1px solid #2b2f36; }
         
-        /* Chart & Entry Marker */
-        #chart-container { height: 350px; width: 100%; position: relative; background: #000; }
-        #entry-marker { position: absolute; width: 100%; height: 2px; border-top: 2px dashed var(--yellow); display: none; z-index: 100; top: 50%; transition: transform 0.1s; }
-        #entry-label { position: absolute; right: 0; top: -22px; background: var(--yellow); color: #000; padding: 3px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; }
+        #chart-container { height: 360px; width: 100%; position: relative; background: #000; }
+        #entry-marker { position: absolute; width: 100%; height: 2px; border-top: 2px dashed var(--yellow); display: none; z-index: 100; top: 50%; transition: 0.1s; }
+        #entry-label { position: absolute; right: 0; top: -25px; background: var(--yellow); color: #000; padding: 4px 10px; font-size: 12px; font-weight: bold; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
 
-        /* Controls */
-        .controls { background: var(--card); padding: 20px; border-radius: 24px 24px 0 0; margin-top: -15px; position: relative; border-top: 1px solid #2b2f36; box-shadow: 0 -10px 20px rgba(0,0,0,0.3); }
-        .input-box { background: #2b3139; border: 1px solid #474d57; color: white; padding: 15px; border-radius: 12px; width: 100%; box-sizing: border-box; margin-bottom: 12px; font-size: 18px; text-align: center; outline: none; }
-        .btn-group { display: flex; gap: 12px; }
-        .btn { flex: 1; padding: 18px; border: none; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.2s; }
-        .up { background: var(--green); color: white; } .down { background: var(--red); color: white; }
-        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .controls { background: var(--card); padding: 25px 20px; border-radius: 30px 30px 0 0; margin-top: -20px; position: relative; border-top: 1px solid #2b2f36; box-shadow: 0 -15px 30px rgba(0,0,0,0.4); }
+        .input-box { background: #2b3139; border: 1px solid #474d57; color: white; padding: 15px; border-radius: 12px; width: 100%; box-sizing: border-box; margin-bottom: 15px; font-size: 20px; text-align: center; font-weight: bold; outline: none; }
+        .btn-group { display: flex; gap: 15px; }
+        .btn { flex: 1; padding: 20px; border: none; border-radius: 12px; font-weight: 900; font-size: 1.2rem; cursor: pointer; text-transform: uppercase; }
+        .up { background: var(--green); color: #fff; } .down { background: var(--red); color: #fff; }
+        .btn:active { transform: scale(0.95); }
 
-        /* Leaderboard & History Panels */
-        .panel { padding: 15px; background: var(--card); margin-top: 5px; border-top: 1px solid #2b2f36; }
-        .section-title { font-weight: bold; color: var(--yellow); font-size: 13px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
-        .row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2b2f36; font-size: 13px; }
-        .flag { width: 22px; height: 15px; margin-right: 8px; border-radius: 2px; }
+        /* Professional Result Sticker (Overlay) */
+        #res-box { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 99999; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .sticker { padding: 40px; border-radius: 20px; text-align: center; border: 2px solid; }
+        .win-sticker { border-color: var(--green); background: rgba(14, 203, 129, 0.1); }
+        .loss-sticker { border-color: var(--red); background: rgba(246, 70, 93, 0.1); }
 
-        /* Result Overlay */
-        #res-box { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; text-align: center; }
+        .panel { padding: 20px; background: var(--card); border-top: 1px solid #2b2f36; }
+        .row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2b2f36; font-size: 14px; }
+        .flag { width: 22px; height: 15px; margin-right: 10px; border-radius: 2px; }
     </style>
 </head>
 <body>
 
 <div class="ticker-wrap">
     <div class="ticker">
-        <span>● Hussain_PK withdrew $1,240.00</span> <span>● User_992 deposited $5,000.00</span> <span>● Rahul_IN withdrew $850.00</span> <span>● Fatima*** deposited $200.00</span> <span>● Alex_USA withdrew $3,100.00</span>
+        <span>● Arsalan_PK withdrew $1,500.00</span> <span>● User_882 deposited $400.00</span> <span>● Rahul_Trader withdrew $920.00</span> <span>● Malik*** deposited $1,000.00</span>
     </div>
 </div>
 
 <div id="res-box">
-    <h1 id="res-msg" style="font-size: 4rem; margin: 0;"></h1>
-    <h2 id="res-amt" style="margin: 20px 0; font-size: 2rem;"></h2>
-    <p id="res-desc" style="color: #848e9c; margin-bottom: 30px;"></p>
-    <button onclick="location.reload()" style="padding: 15px 60px; background: var(--yellow); border: none; border-radius: 12px; font-weight: bold; font-size: 1.1rem;">CONTINUE</button>
+    <div id="sticker-main" class="sticker">
+        <h1 id="res-title" style="font-size: 5rem; margin: 0; letter-spacing: 5px;">WIN</h1>
+        <h2 id="res-val" style="font-size: 2.5rem; margin: 15px 0;">+$18.50</h2>
+        <p id="res-msg" style="color: #848e9c; margin-bottom: 30px; font-weight: bold;">Trade Successful!</p>
+        <button onclick="location.reload()" style="padding: 18px 80px; background: var(--yellow); border: none; border-radius: 12px; font-weight: 900; font-size: 1.1rem; cursor: pointer;">CONTINUE</button>
+    </div>
 </div>
 
 <div class="top-bar">
-    <div style="font-weight:bold; color:var(--yellow)">BTC / USDT</div>
-    <div>Wallet: <span id="top-bal" style="color:var(--yellow); font-weight:bold;">$0.00</span></div>
+    <div style="font-weight:900; color:var(--yellow); font-size: 18px;">BTC/USDT</div>
+    <div>Balance: <span id="top-bal" style="color:var(--yellow); font-weight:bold;">$0.00</span></div>
 </div>
 
 <div id="chart-container">
-    <div id="entry-marker"><span id="entry-label">FETCHING PRICE...</span></div>
-    <iframe id="tv-frame" src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:BTCUSDT&interval=1&theme=dark" style="width: 100%; height: 100%; border: none;"></iframe>
+    <div id="entry-marker"><span id="entry-label">ENTRY @ 0.00</span></div>
+    <iframe src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:BTCUSDT&interval=1&theme=dark" style="width: 100%; height: 100%; border: none;"></iframe>
 </div>
 
 <div class="controls">
-    <div id="status-text" style="text-align:center; color:var(--yellow); font-size:13px; margin-bottom:10px; font-weight:bold;">SYNCING WITH BINANCE...</div>
+    <div id="status-text" style="text-align:center; color:var(--yellow); font-size:14px; margin-bottom:12px; font-weight:bold; letter-spacing:1px;">MARKET ANALYZING...</div>
     <input type="number" id="trade-amt" class="input-box" value="10">
     <div class="btn-group">
-        <button class="btn up" id="up-btn" onclick="startTrade('UP')" disabled>UP</button>
-        <button class="btn down" id="down-btn" onclick="startTrade('DOWN')" disabled>DOWN</button>
+        <button class="btn up" onclick="startTrade('UP')">CALL ↑</button>
+        <button class="btn down" onclick="startTrade('DOWN')">PUT ↓</button>
     </div>
 </div>
 
 <div class="panel">
-    <div class="section-title">Global Rankings (Today)</div>
+    <div style="color:var(--yellow); font-weight:bold; margin-bottom:15px; font-size: 12px; text-transform: uppercase;">Global Ranking</div>
     <div id="lb-list"></div>
 </div>
 
-<div class="panel">
-    <div class="section-title">Trade History</div>
-    <div id="hist-list"></div>
-</div>
-
 <script>
-    // 1. Firebase Config
     const firebaseConfig = { apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", authDomain: "trade-for-profit-8b160.firebaseapp.com", databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", projectId: "trade-for-profit-8b160", storageBucket: "trade-for-profit-8b160.firebasestorage.app", messagingSenderId: "1077014018991", appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -97,61 +92,49 @@
     let livePrice = 0;
     let isTrading = false;
 
-    // 2. Real-time Price Logic (Fixes 0.00 issue)
-    function syncPrice() {
+    // Price Sync Fix
+    function getPrice() {
         fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT')
         .then(r => r.json()).then(d => {
             livePrice = parseFloat(d.price);
-            if(!isTrading) {
-                document.getElementById('up-btn').disabled = false;
-                document.getElementById('down-btn').disabled = false;
-                document.getElementById('status-text').innerText = "MARKET OPEN";
-            }
+            if(!isTrading) document.getElementById('status-text').innerText = "MARKET CONNECTED";
         });
     }
-    setInterval(syncPrice, 1000);
+    setInterval(getPrice, 1000);
 
-    // 3. User Data & Refresh Fix
     auth.onAuthStateChanged(u => {
         if(u) {
             db.ref('users/'+u.uid).on('value', s => {
-                const data = s.val() || {};
-                document.getElementById('top-bal').innerText = "$" + (data.balance || 0).toFixed(2);
-                renderLB(u.email, data.name);
-                renderHistory(data.history);
-                checkActive(u.uid, data.activeTrade);
+                const d = s.val() || {};
+                document.getElementById('top-bal').innerText = "$" + (d.balance || 0).toFixed(2);
+                renderLB(u.email, d.name);
+                checkActive(u.uid, d.activeTrade);
             });
         }
     });
 
     function renderLB(email, name) {
         const lb = document.getElementById('lb-list');
-        const userDisplay = name || email.split('@')[0];
         lb.innerHTML = `
-            <div class="row" style="background: rgba(246, 70, 93, 0.1); border: 1px solid #44262a; border-radius: 8px; padding: 10px;">
-                <div style="display:flex; align-items:center;">
-                    <span style="color:var(--yellow); font-weight:bold; margin-right:10px;">#1</span>
-                    <img class="flag" src="https://flagcdn.com/w40/pk.png">
-                    <span>${userDisplay} (You)</span>
-                </div>
-                <span style="color:var(--red); font-weight:bold;">-$480.20</span>
+            <div class="row" style="background: rgba(246, 70, 93, 0.1); padding: 10px; border-radius: 8px;">
+                <div style="display:flex; align-items:center;"><img class="flag" src="https://flagcdn.com/w40/pk.png"><span>${name || email.split('@')[0]} (You)</span></div>
+                <span style="color:var(--red); font-weight:bold;">-$480.50</span>
             </div>
-            <div class="row"><div style="display:flex; align-items:center;"><span style="margin-right:10px; color:#848e9c;">#2</span><img class="flag" src="https://flagcdn.com/w40/in.png"><span>Rahul_Vip***</span></div><span style="color:var(--green); font-weight:bold;">+$4,200</span></div>
-            <div class="row"><div style="display:flex; align-items:center;"><span style="margin-right:10px; color:#848e9c;">#3</span><img class="flag" src="https://flagcdn.com/w40/il.png"><span>Trader_Israel</span></div><span style="color:var(--green); font-weight:bold;">+$3,850</span></div>
+            <div class="row"><div style="display:flex; align-items:center;"><img class="flag" src="https://flagcdn.com/w40/in.png"><span>Rahul_Vip***</span></div><span style="color:var(--green); font-weight:bold;">+$3,800.00</span></div>
         `;
     }
 
     function startTrade(dir) {
-        if(livePrice === 0) return;
+        if(livePrice === 0) return alert("Price Syncing... Wait 2s");
         const u = auth.currentUser;
         const amt = parseFloat(document.getElementById('trade-amt').value);
         
         db.ref('users/'+u.uid).once('value', s => {
             const bal = s.val().balance || 0;
-            if(amt > bal) return alert("Insufficient Balance");
-
-            const activeTrade = { dir, amount: amt, entryPrice: livePrice, startTime: Date.now(), status: "running" };
-            db.ref('users/'+u.uid).update({ balance: bal - amt, activeTrade: activeTrade });
+            if(amt > bal) return alert("Low Balance!");
+            
+            const trade = { dir, amount: amt, entryPrice: livePrice, startTime: Date.now(), status: "running" };
+            db.ref('users/'+u.uid).update({ balance: bal - amt, activeTrade: trade });
         });
     }
 
@@ -162,56 +145,48 @@
             return;
         }
         isTrading = true;
-        document.getElementById('up-btn').disabled = true;
-        document.getElementById('down-btn').disabled = true;
-
         const timeLeft = 60 - Math.floor((Date.now() - trade.startTime) / 1000);
-        
-        // MANIPULATION VISUAL (Shake)
-        if(timeLeft <= 10 && timeLeft > 0) {
-            document.getElementById('status-text').style.color = "var(--red)";
-            document.getElementById('status-text').innerText = "HIGH VOLATILITY: CALCULATING...";
-            document.getElementById('entry-marker').style.transform = `translateY(${Math.random() * 4 - 2}px)`;
-        } else {
-            document.getElementById('status-text').innerText = "TRADE CLOSING IN: " + timeLeft + "s";
-        }
 
         if(timeLeft <= 0) {
             finishTrade(uid, trade);
         } else {
+            document.getElementById('status-text').innerText = "TRADE CLOSING IN: " + timeLeft + "s";
             document.getElementById('entry-marker').style.display = "block";
             document.getElementById('entry-label').innerText = "ENTRY @ " + trade.entryPrice.toFixed(2);
+            
+            // Manipulation Vibe
+            if(timeLeft < 10) document.getElementById('entry-marker').style.transform = `translateY(${Math.random()*4-2}px)`;
+            
             setTimeout(() => checkActive(uid, trade), 1000);
         }
     }
 
     function finishTrade(uid, trade) {
         db.ref('users/'+uid).once('value', s => {
-            const control = s.val().control || "NORMAL";
-            // 90% Loss logic for Normal mode
-            let win = (control === "WIN") ? true : (control === "LOSS" ? false : Math.random() > 0.9);
+            const ctrl = s.val().control || "NORMAL";
+            let win = (ctrl === "WIN") ? true : (ctrl === "LOSS" ? false : Math.random() > 0.85);
             const payout = win ? (trade.amount * 1.85) : 0;
             
-            const history = s.val().history || [];
-            history.unshift({ dir: trade.dir, amt: trade.amount, res: win ? "WIN" : "LOSS", time: new Date().toLocaleTimeString() });
+            db.ref('users/'+uid).update({ balance: s.val().balance + payout, activeTrade: null });
 
-            db.ref('users/'+uid).update({ balance: s.val().balance + payout, activeTrade: null, history: history.slice(0, 8) });
-
-            // SHOW RESULT
-            document.getElementById('res-msg').innerText = win ? "PROFIT" : "LOSS";
-            document.getElementById('res-msg').style.color = win ? "var(--green)" : "var(--red)";
-            document.getElementById('res-amt').innerText = win ? "+$" + (trade.amount * 0.85).toFixed(2) : "-$" + trade.amount;
-            document.getElementById('res-desc').innerText = win ? "Market stayed in your favor." : "Market reversed at last second.";
-            document.getElementById('res-box').style.display = "flex";
-        });
-    }
-
-    function renderHistory(hist) {
-        const list = document.getElementById('hist-list');
-        list.innerHTML = "";
-        if(!hist) { list.innerHTML = "<div style='color:#5e6673; text-align:center;'>No trades found</div>"; return; }
-        hist.forEach(h => {
-            list.innerHTML += `<div class="row"><span>${h.dir} | ${h.time}</span><span style="color:${h.res === 'WIN' ? 'var(--green)' : 'var(--red)'}">${h.res} ($${h.amt})</span></div>`;
+            // SHOW PROFESSIONAL STICKER
+            const box = document.getElementById('res-box');
+            const main = document.getElementById('sticker-main');
+            box.style.display = "flex";
+            
+            if(win) {
+                main.className = "sticker win-sticker";
+                document.getElementById('res-title').innerText = "WIN";
+                document.getElementById('res-title').style.color = "var(--green)";
+                document.getElementById('res-val').innerText = "+$" + (trade.amount * 0.85).toFixed(2);
+                document.getElementById('res-msg').innerText = "Market predicted correctly!";
+            } else {
+                main.className = "sticker loss-sticker";
+                document.getElementById('res-title').innerText = "LOSS";
+                document.getElementById('res-title').style.color = "var(--red)";
+                document.getElementById('res-val').innerText = "-$" + trade.amount;
+                document.getElementById('res-msg').innerText = "Market reversed at last second.";
+            }
         });
     }
 </script>
