@@ -1,68 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-Terminal | Dashboard</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trade For Profit</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    
     <style>
-        :root { --bg: #0b0e11; --card: #1e2329; --yellow: #f0b90b; --green: #02c076; --red: #f6465d; --text: #ffffff; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 15px; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #2b3139; }
-        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-top: 20px; border: 1px solid #2b3139; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .balance-title { font-size: 0.9rem; color: #848e9c; }
-        .balance-amount { font-size: 2.2rem; font-weight: bold; color: var(--yellow); margin: 5px 0; }
-        .kyc-badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 5px; text-transform: uppercase; }
-        .pending { background: #5a4a1a; color: var(--yellow); }
-        .approved { background: #1a5a3a; color: var(--green); }
-        
-        .grid-menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px; }
-        .menu-item { background: var(--card); padding: 15px; border-radius: 12px; text-align: center; text-decoration: none; color: white; border: 1px solid #2b3139; font-size: 0.9rem; font-weight: 500; }
-        
-        .deposit-section { margin-top: 20px; }
-        select, input { width: 100%; padding: 12px; margin: 10px 0; background: #2b3139; border: 1px solid #474d57; color: white; border-radius: 8px; box-sizing: border-box; outline: none; }
-        .btn-main { width: 100%; padding: 15px; background: var(--yellow); color: black; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: 10px; }
-        .address-box { background: #000; padding: 10px; border-radius: 5px; border: 1px dashed var(--yellow); text-align: center; margin: 10px 0; font-family: monospace; color: var(--yellow); word-break: break-all; }
+        body { background: #0b0e11; color: white; font-family: sans-serif; padding: 20px; }
+        .card { background: #1e2329; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #2b3139; }
+        .accent { color: #f0b90b; font-weight: bold; }
+        .status { color: #f6465d; }
+        select { width: 100%; padding: 12px; background: #2b3139; color: white; border: 1px solid #474d57; border-radius: 8px; margin-top: 10px; }
+        .btn { width: 100%; padding: 15px; background: #f0b90b; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
-
-    <div class="header">
-        <span style="font-weight:bold; font-size:1.2rem; color:var(--yellow);">G-TERMINAL</span>
-        <button onclick="logout()" style="background:none; border:none; color:#848e9c; cursor:pointer;">Logout</button>
+    <div class="card">
+        <h2>Balance: <span class="accent" id="bal">Loading...</span></h2>
+        <p>KYC: <span id="kyc" class="status">Checking...</span></p>
     </div>
 
     <div class="card">
-        <div class="balance-title">Total Balance (USDT)</div>
-        <div class="balance-amount" id="user-balance">$0.00</div>
-        <div>Status: <span id="user-kyc" class="kyc-badge pending">Checking...</span></div>
-    </div>
-
-    <div class="grid-menu">
-        <a href="trade.html" class="menu-item" style="border-color: var(--green);">📊 Live Trade</a>
-        <a href="kyc.html" class="menu-item">🆔 Verify KYC</a>
-        <a href="withdraw.html" class="menu-item">💰 Withdraw</a>
-        <a href="transfer.html" class="menu-item">🔄 Transfer</a>
-    </div>
-
-    <div class="card deposit-section">
-        <h3 style="margin-top:0;">Deposit Funds</h3>
-        <p style="font-size:0.8rem; color:#848e9c;">Min Deposit: $10 / 3000 PKR</p>
-        <select id="method-selector" onchange="updateAdminAddress()">
-            <option value="easypaisa">EasyPaisa (PKR)</option>
-            <option value="jazzcash">JazzCash (PKR)</option>
+        <h3>Deposit Funds</h3>
+        <select id="method" onchange="loadAddr()">
+            <option value="easypaisa">EasyPaisa</option>
+            <option value="jazzcash">JazzCash</option>
             <option value="trc20">USDT (TRC20)</option>
         </select>
-        <div class="address-box" id="admin-address">Loading Address...</div>
-        <button class="btn-main" onclick="shareReferral()">Copy Referral Link</button>
-        <p style="text-align:center; font-size:0.75rem; color:#848e9c; margin-top:10px;">Share with friends and earn!</p>
+        <p style="margin-top:15px; font-size:0.9rem; color:#848e9c;">Send to: <strong id="addr" class="accent">03442585087</strong></p>
+    </div>
+
+    <div class="card">
+        <h3>Invite Friends</h3>
+        <button class="btn" onclick="copyRef()">Copy Referral Link</button>
     </div>
 
     <script>
-        // 1. Firebase Configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyCM_qmcvOXX
-        
+            apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU",
+            authDomain: "trade-for-profit-8b160.firebaseapp.com",
+            databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com",
+            projectId: "trade-for-profit-8b160",
+            storageBucket: "trade-for-profit-8b160.firebasestorage.app",
+            messagingSenderId: "1077014018991",
+            appId: "1:1077014018991:web:c41320e2ef10291afd4d5a"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const auth = firebase.auth();
+
+        auth.onAuthStateChanged(user => {
+            if(user) {
+                db.ref('users/' + user.uid).on('value', snap => {
+                    const d = snap.val();
+                    if(d) {
+                        document.getElementById('bal').innerText = "$" + (d.balance || "0.00");
+                        document.getElementById('kyc').innerText = d.kyc_status || "NOT_VERIFIED";
+                        window.myCode = d.referral_code;
+                    }
+                });
+            } else { window.location.href = "login.html"; }
+        });
+
+        function loadAddr() {
+            const m = document.getElementById('method').value;
+            db.ref('admin_settings/payments/' + m).on('value', s => {
+                if(s.val()) document.getElementById('addr').innerText = s.val();
+            });
+        }
+
+        function copyRef() {
+            const link = window.location.origin + "/register.html?ref=" + window.myCode;
+            navigator.clipboard.writeText(link); alert("Link Copied!");
+        }
+    </script>
+</body>
+</html>
