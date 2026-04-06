@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-Terminal | Sign Up</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <style>
+        body { background: #0b0e11; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: #1e2329; padding: 30px; border-radius: 12px; width: 320px; border: 1px solid #2b3139; }
+        input { width: 100%; padding: 12px; margin: 10px 0; background: #2b3139; border: 1px solid #474d57; color: white; border-radius: 5px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; background: #f0b90b; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; }
+    </style>
+</head>
+<body>
+<div class="box">
+    <h2 style="color:#f0b90b; text-align:center;">Register</h2>
+    <div id="ref-note" style="font-size:0.8rem; color:#02c076; text-align:center; display:none;">Referral Applied!</div>
+    <input type="text" id="name" placeholder="Full Name">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="pass" placeholder="Password">
+    <button class="btn" onclick="register()">Sign Up</button>
+    <p style="text-align:center; font-size:0.8rem;">Got account? <a href="login.html" style="color:#f0b90b;">Login</a></p>
+</div>
+<script>
+    const firebaseConfig = { apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", authDomain: "trade-for-profit-8b160.firebaseapp.com", databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", projectId: "trade-for-profit-8b160", storageBucket: "trade-for-profit-8b160.firebasestorage.app", messagingSenderId: "1077014018991", appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref') || "NONE";
+    if(ref !== "NONE") document.getElementById('ref-note').style.display = "block";
+
+    function register() {
+        const n = document.getElementById('name').value;
+        const e = document.getElementById('email').value;
+        const p = document.getElementById('pass').value;
+        auth.createUserWithEmailAndPassword(e, p).then(res => {
+            const myCode = "GT-" + res.user.uid.substring(0,5).toUpperCase();
+            db.ref('users/' + res.user.uid).set({ name: n, email: e, balance: 0, kyc_status: "NOT_VERIFIED", referral_code: myCode, referred_by: ref, control: "NORMAL" })
+            .then(() => { window.location.href = "index.html"; });
+        }).catch(err => alert(err.message));
+    }
+</script>
+</body>
+  </ht
+    ml>
