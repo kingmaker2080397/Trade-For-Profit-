@@ -50,16 +50,22 @@
         const db = firebase.database();
         const auth = firebase.auth();
 
-        auth.onAuthStateChanged(user => {
-            if(user) {
-                db.ref('users/' + user.uid).on('value', snap => {
-                    const d = snap.val();
-                    if(d) {
-                        document.getElementById('bal').innerText = "$" + (d.balance || "0.00");
-                        document.getElementById('kyc').innerText = d.kyc_status || "NOT_VERIFIED";
-                        window.myCode = d.referral_code;
-                    }
-                });
+        firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+        // User login hai, uska data fetch karo
+        firebase.database().ref('users/' + user.uid).on('value', snap => {
+            const data = snap.val();
+            if(data) {
+                document.getElementById('bal').innerText = "$" + data.balance;
+                document.getElementById('kyc').innerText = data.kyc_status;
+            }
+        });
+    } else {
+        // Agar login nahi hai toh login page par bhejo
+        window.location.href = "login.html";
+    }
+});
+        
             } else { window.location.href = "login.html"; }
         });
 
