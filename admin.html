@@ -1,49 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-Terminal | Admin Control</title>
+    <meta charset="UTF-8"><title>Admin Panel</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    
     <style>
-        :root { --bg: #0b0e11; --card: #1e2329; --yellow: #f0b90b; --green: #02c076; --red: #f6465d; }
-        body { background: var(--bg); color: white; font-family: sans-serif; padding: 20px; }
-        .card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #2b3139; margin-bottom: 20px; }
-        h2 { color: var(--yellow); border-bottom: 1px solid #2b3139; padding-bottom: 10px; }
-        input { padding: 10px; background: #2b3139; border: 1px solid #474d57; color: white; border-radius: 5px; width: 250px; margin-right: 10px; }
-        button { padding: 10px 20px; background: var(--yellow); border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #161a1e; }
-        th, td { padding: 12px; border: 1px solid #2b3139; text-align: left; font-size: 0.9rem; }
-        th { background: #2b3139; color: var(--yellow); }
-        .btn-win { background: var(--green); color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; }
-        .btn-loss { background: var(--red); color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; }
+        body { background: #0b0e11; color: white; padding: 20px; font-family: sans-serif; }
+        .box { background: #1e2329; padding: 20px; border-radius: 10px; border: 1px solid #2b3139; margin-bottom: 20px; }
+        input { padding: 10px; background: #2b3139; border: 1px solid #474d57; color: white; width: 200px; margin-right: 10px; }
+        button { padding: 10px; background: #f0b90b; border: none; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-
-    <h1>G-Terminal Master Admin</h1>
-
-    <div class="card">
-        <h2>Payment Methods (Min Deposit: 3000 PKR / $10)</h2>
-        <p>JazzCash: <input type="text" id="jazz-num" placeholder="Enter Number"> <button onclick="savePay('jazzcash', 'jazz-num')">Update</button></p>
-        <p>EasyPaisa: <input type="text" id="ep-num" placeholder="Enter Number"> <button onclick="savePay('easypaisa', 'ep-num')">Update</button></p>
-        <p>USDT TRC20: <input type="text" id="usdt-addr" placeholder="Enter Address"> <button onclick="savePay('trc20', 'usdt-addr')">Update</button></p>
-    </div>
-
-    <div class="card">
-        <h2>Pending KYC Verification</h2>
-        <table id="kyc-table">
-            <tr><th>Name</th><th>CNIC</th><th>Document</th><th>Action</th></tr>
-        </table>
-    </div>
-
-    <div class="card">
-        <h2>User Management & Trade Control</h2>
-        <table id="user-table">
-            <tr><th>User Email</th><th>Balance</th><th>Status</th><th>Mode</th><th>Action</th></tr>
-        </table>
+    <div class="box">
+        <h2>Update Payment Numbers</h2>
+        <input type="text" id="val" placeholder="Enter Number/Address">
+        <select id="meth" style="padding:10px;">
+            <option value="easypaisa">EasyPaisa</option>
+            <option value="jazzcash">JazzCash</option>
+            <option value="trc20">USDT</option>
+        </select>
+        <button onclick="upd()">Update Now</button>
     </div>
 
     <script>
@@ -56,63 +33,13 @@
             messagingSenderId: "1077014018991",
             appId: "1:1077014018991:web:c41320e2ef10291afd4d5a"
         };
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Save Payment Numbers
-        function savePay(method, inputId) {
-            const val = document.getElementById(inputId).value;
-            db.ref('admin_settings/payments/' + method).set(val).then(() => alert("Payment Updated!"));
-        }
-
-        // Load KYC & Users
-        db.ref('users').on('value', (snapshot) => {
-            const users = snapshot.val();
-            const kycTable = document.getElementById('kyc-table');
-            const userTable = document.getElementById('user-table');
-
-            // Reset Tables
-            kycTable.innerHTML = '<tr><th>Name</th><th>CNIC</th><th>Document</th><th>Action</th></tr>';
-            userTable.innerHTML = '<tr><th>User Email</th><th>Balance</th><th>Status</th><th>Mode</th><th>Action</th></tr>';
-
-            for (let uid in users) {
-                const u = users[uid];
-
-                // KYC Table Logic
-                if (u.kyc_status === "PENDING") {
-                    kycTable.innerHTML += `<tr>
-                        <td>${u.kyc_data.name}</td>
-                        <td>${u.kyc_data.cnic}</td>
-                        <td><a href="${u.kyc_data.image}" target="_blank" style="color:var(--yellow)">View Image</a></td>
-                        <td>
-                            <button onclick="updateKYC('${uid}', 'APPROVED')" style="background:var(--green)">Approve</button>
-                            <button onclick="updateKYC('${uid}', 'REJECTED')" style="background:var(--red)">Reject</button>
-                        </td>
-                    </tr>`;
-                }
-
-                // User Control Table
-                userTable.innerHTML += `<tr>
-                    <td>${u.email}</td>
-                    <td>$${parseFloat(u.balance || 0).toFixed(2)}</td>
-                    <td>${u.kyc_status}</td>
-                    <td style="font-weight:bold; color:${u.control === 'WIN' ? 'var(--green)' : (u.control === 'LOSS' ? 'var(--red)' : 'white')}">${u.control}</td>
-                    <td>
-                        <button class="btn-win" onclick="setControl('${uid}', 'WIN')">Force Win</button>
-                        <button class="btn-loss" onclick="setControl('${uid}', 'LOSS')">Force Loss</button>
-                        <button onclick="setControl('${uid}', 'NORMAL')" style="background:#848e9c">Normal</button>
-                    </td>
-                </tr>`;
-            }
-        });
-
-        function updateKYC(uid, status) {
-            db.ref('users/' + uid).update({ kyc_status: status });
-        }
-
-        function setControl(uid, mode) {
-            db.ref('users/' + uid).update({ control: mode });
+        function upd() {
+            const m = document.getElementById('meth').value;
+            const v = document.getElementById('val').value;
+            db.ref('admin_settings/payments/' + m).set(v).then(() => alert("Updated!"));
         }
     </script>
 </body>
