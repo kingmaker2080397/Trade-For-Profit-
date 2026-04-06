@@ -1,0 +1,19 @@
+function submitKYC() {
+    const uid = auth.currentUser.uid;
+    const cnicVal = document.getElementById('cnic_input').value;
+    const docLink = document.getElementById('doc_url').value;
+
+    if(!cnicVal || !docLink) return alert("Please fill all fields!");
+
+    db.ref('users/' + uid).update({
+        kyc_status: "PENDING",
+        kyc_data: {
+            cnic: cnicVal,
+            document: docLink,
+            submitted_at: Date.now()
+        }
+    }).then(() => {
+        alert("KYC Submitted! Admin will review it soon.");
+        window.location.href = "index.html";
+    });
+}
