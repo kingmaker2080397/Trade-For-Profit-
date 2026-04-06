@@ -3,59 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-Terminal | Home</title>
+    <title>G-Terminal | Dashboard</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     
     <style>
-        :root { --bg: #0b0e11; --card: #1e2329; --yellow: #f0b90b; --green: #02c076; --text: #ffffff; }
+        :root { --bg: #0b0e11; --card: #1e2329; --yellow: #f0b90b; --green: #02c076; --red: #f6465d; --text: #ffffff; }
         body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 15px; }
-        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #2b3139; }
-        .balance { font-size: 2.2rem; font-weight: bold; color: var(--yellow); margin: 5px 0; }
-        .status-badge { font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; background: #333; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #2b3139; }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-top: 20px; border: 1px solid #2b3139; }
+        .balance-title { font-size: 0.9rem; color: #848e9c; }
+        .balance-amount { font-size: 2.2rem; font-weight: bold; color: var(--yellow); margin: 5px 0; }
+        .kyc-badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 5px; text-transform: uppercase; }
+        .pending { background: #5a4a1a; color: var(--yellow); }
+        .approved { background: #1a5a3a; color: var(--green); }
         
-        /* Navigation Buttons Grid */
-        .nav-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
-        .nav-item { 
-            background: var(--card); border: 1px solid var(--yellow); padding: 15px; 
-            border-radius: 12px; text-align: center; text-decoration: none; 
-            color: white; font-weight: bold; font-size: 0.9rem;
-        }
-
-        select, button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; border: none; outline: none; }
-        #admin-addr { background: #000; padding: 10px; border: 1px dashed var(--yellow); text-align: center; color: var(--yellow); font-family: monospace; }
-        .btn-ref { background: var(--yellow); color: black; font-weight: bold; cursor: pointer; }
+        .grid-menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px; }
+        .menu-item { background: var(--card); padding: 15px; border-radius: 12px; text-align: center; text-decoration: none; color: white; border: 1px solid #2b3139; font-size: 0.9rem; font-weight: 500; }
+        
+        .deposit-section { margin-top: 20px; }
+        select, input { width: 100%; padding: 12px; margin: 10px 0; background: #2b3139; border: 1px solid #474d57; color: white; border-radius: 8px; box-sizing: border-box; outline: none; }
+        .btn-main { width: 100%; padding: 15px; background: var(--yellow); color: black; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: 10px; }
+        .address-box { background: #000; padding: 10px; border-radius: 5px; border: 1px dashed var(--yellow); text-align: center; margin: 10px 0; font-family: monospace; color: var(--yellow); word-break: break-all; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <p style="color: #848e9c; margin: 0;">Total Balance (USDT)</p>
-        <div class="balance" id="user-balance">$0.00</div>
-        <p>KYC Status: <span id="user-kyc" class="status-badge">Checking...</span></p>
-    </div>
-
-    <div class="nav-grid">
-        <a href="trade.html" class="nav-item">📊 Live Trade</a>
-        <a href="kyc.html" class="nav-item">🆔 Verify KYC</a>
-        <a href="withdraw.html" class="nav-item">💰 Withdraw</a>
-        <a href="admin.html" class="nav-item" style="border-color: #474d57;">⚙️ Admin</a>
+    <div class="header">
+        <span style="font-weight:bold; font-size:1.2rem; color:var(--yellow);">G-TERMINAL</span>
+        <button onclick="logout()" id="logout-btn" style="background:none; border:none; color:#848e9c; cursor:pointer; display:none;">Logout</button>
+        <button onclick="window.location.href='login.html'" id="login-btn" style="background:var(--yellow); border:none; color:black; padding:5px 10px; border-radius:5px; cursor:pointer;">Login</button>
     </div>
 
     <div class="card">
-        <h3>Deposit Funds</h3>
-        <select id="method-select" onchange="loadAdminData()">
+        <div class="balance-title">Total Balance (USDT)</div>
+        <div class="balance-amount" id="user-balance">$0.00</div>
+        <div>Status: <span id="user-kyc" class="kyc-badge pending">NOT VERIFIED</span></div>
+    </div>
+
+    <div class="grid-menu">
+        <a href="#" onclick="checkAuth('trade.html')" class="menu-item" style="border-color: var(--green);">📊 Live Trade</a>
+        <a href="#" onclick="checkAuth('kyc.html')" class="menu-item">🆔 Verify KYC</a>
+        <a href="#" onclick="checkAuth('withdraw.html')" class="menu-item">💰 Withdraw</a>
+        <a href="transfer.html" class="menu-item">🔄 Transfer</a>
+    </div>
+
+    <div class="card deposit-section">
+        <h3 style="margin-top:0;">Deposit Funds</h3>
+        <p style="font-size:0.8rem; color:#848e9c;">Min Deposit: $10 / 3000 PKR</p>
+        <select id="method-selector" onchange="updateAdminAddress()">
             <option value="easypaisa">EasyPaisa (PKR)</option>
             <option value="jazzcash">JazzCash (PKR)</option>
             <option value="trc20">USDT (TRC20)</option>
         </select>
-        <p style="font-size: 0.8rem; color: #848e9c; margin-top: 10px;">Send Amount to:</p>
-        <div id="admin-addr">Loading...</div>
-        <button class="btn-ref" onclick="copyLink()" style="margin-top: 20px;">Copy Referral Link</button>
+        <div class="address-box" id="admin-address">03442585087</div>
+        <button class="btn-main" onclick="shareReferral()">Copy Referral Link</button>
     </div>
 
     <script>
+        // 1. Firebase Configuration (Copy from your Firebase Console)
         const firebaseConfig = {
             apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU",
             authDomain: "trade-for-profit-8b160.firebaseapp.com",
@@ -70,38 +77,80 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // Check Login and Sync Data
+        // 2. Auth State & Welcome Bonus Logic
         auth.onAuthStateChanged(user => {
             if (user) {
-                db.ref('users/' + user.uid).on('value', (snap) => {
-                    const data = snap.val();
-                    if (data) {
-                        document.getElementById('user-balance').innerText = "$" + parseFloat(data.balance).toFixed(2);
-                        document.getElementById('user-kyc').innerText = data.kyc_status;
-                        document.getElementById('user-kyc').style.color = (data.kyc_status === "APPROVED") ? "#02c076" : "#f6465d";
-                        window.userRefCode = data.referral_code;
+                document.getElementById('logout-btn').style.display = 'block';
+                document.getElementById('login-btn').style.display = 'none';
+                
+                const userRef = db.ref('users/' + user.uid);
+                userRef.on('value', (snapshot) => {
+                    let data = snapshot.val();
+                    
+                    // Naya User Hai Toh $1 Bonus Set Karo
+                    if (!data) {
+                        const myRefCode = "GT-" + user.uid.substring(0, 5).toUpperCase();
+                        data = {
+                            name: user.email.split('@')[0],
+                            balance: 1.0, // $1 Welcome Bonus
+                            kyc_status: "NOT_VERIFIED",
+                            referral_code: myRefCode,
+                            control: "NORMAL"
+                        };
+                        userRef.set(data);
                     }
+
+                    // UI Update
+                    document.getElementById('user-balance').innerText = "$" + parseFloat(data.balance || 0).toFixed(2);
+                    const kycEl = document.getElementById('user-kyc');
+                    kycEl.innerText = data.kyc_status || "NOT_VERIFIED";
+                    kycEl.className = "kyc-badge " + (data.kyc_status === 'APPROVED' ? 'approved' : 'pending');
+                    window.userReferralCode = data.referral_code;
                 });
             } else {
-                // Agar login nahi hai toh login.html par bhejo
-                window.location.href = "login.html";
+                document.getElementById('logout-btn').style.display = 'none';
+                document.getElementById('login-btn').style.display = 'block';
+                document.getElementById('user-balance').innerText = "$0.00";
+                document.getElementById('user-kyc').innerText = "NOT VERIFIED";
             }
         });
 
-        // Load Admin Payment Numbers
-        function loadAdminData() {
-            const method = document.getElementById('method-select').value;
+        // 3. Admin Addresses Load Karo
+        function updateAdminAddress() {
+            const method = document.getElementById('method-selector').value;
             db.ref('admin_settings/payments/' + method).on('value', (snap) => {
-                document.getElementById('admin-addr').innerText = snap.val() || "Not Set";
+                const addr = snap.val();
+                document.getElementById('admin-address').innerText = addr || "03442585087";
             });
         }
-        loadAdminData(); // Initial load
 
-        function copyLink() {
-            const link = window.location.origin + "/Trade-For-Profit-/register.html?ref=" + window.userRefCode;
-            navigator.clipboard.writeText(link);
-            alert("Referral Link Copied!");
+        // 4. Check Authentication Before Opening Section (Trade Fix)
+        function checkAuth(url) {
+            const user = auth.currentUser;
+            if (user) {
+                window.location.href = url;
+            } else {
+                alert("Please Login first to access this section!");
+                window.location.href = "login.html";
+            }
         }
+
+        // 5. Referral Link Share
+        function shareReferral() {
+            if(!window.userReferralCode) return alert("Please Login first!");
+            const link = window.location.origin + "/register.html?ref=" + window.userReferralCode;
+            navigator.clipboard.writeText(link).then(() => {
+                alert("Referral Link Copied: " + link);
+            });
+        }
+
+        // 6. Logout
+        function logout() {
+            auth.signOut().then(() => { window.location.reload(); });
+        }
+
+        // Initial Load
+        updateAdminAddress();
     </script>
 </body>
 </html>
