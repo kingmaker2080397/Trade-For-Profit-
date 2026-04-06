@@ -49,11 +49,61 @@
         
         <input type="number" id="trade-amt" placeholder="Enter Amount ($)">
         
-        <div style="display: flex; justify-content: space-between;">
-            <button class="btn-call">CALL (UP)</button>
-            <button class="btn-put">PUT (DOWN)</button>
-        </div>
-    </div>
+        // Is script ko trade.html ke end mein replace karein
 
+function startTrade(dir) {
+    const user = auth.currentUser;
+    if (!user) return alert("Please Login!");
+
+    const amt = parseFloat(document.getElementById('trade-amt').value);
+    if (isNaN(amt) || amt < 1) return alert("Minimum trade is $1");
+
+    db.ref('users/' + user.uid).once('value', snap => {
+        const userData = snap.val();
+        if (amt > userData.balance) return alert("Insufficient Balance!");
+
+        // 1. Deduct amount initially
+        let tempBal = userData.balance - amt;
+        db.ref('users/' + user.uid).update({ balance: tempBal });
+
+        // 2. Start Timer Logic
+        let duration = 60; // default 1 min
+        let timeLeft = duration;
+        isTradeActive = true;
+        const entryPrice = currentPrice;
+
+        const countdown = setInterval(() => {
+            timeLeft--;
+            // Timer UI update yahan karein
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                isTradeActive = false;
+                
+                // 3. Process Result (Manual vs Admin Force)
+                let result = "";
+                if (userData.control === "WIN") result = "WIN";
+                else if (userData.control === "LOSS") result = "LOSS";
+                else {
+                    // Manual Logic
+                    if (dir === 'UP') result = (currentPrice > entryPrice) ? "WIN" : "LOSS";
+                    else result = (currentPrice < entryPrice) ? "WIN" : "LOSS";
+                }
+
+                // 4. Update Final Balance
+                if (result === "WIN") {
+                    let winProfit = amt * 1.85; // 85% Profit + Capital
+                    db.ref('users/' + user.uid).update({ balance: tempBal + winProfit });
+                    alert("Trade WON! Result: WIN");
+                } else {
+                    alert("Trade LOST! Result: LOSS");
+                }
+            }
+        }, 1000);
+    });
+}
+                        
+    </div>
+    
+                        
 </body>
 </html>
