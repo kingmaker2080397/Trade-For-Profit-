@@ -1,204 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-Terminal Mobile</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-Terminal | Dashboard</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
-        :root {
-            --bg: #0b0e11;
-            --card: #1e2329;
-            --accent: #00f2ff;
-            --green: #02c076;
-            --red: #f6465d;
-            --text: #ffffff;
-        }
-
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-
-        .navbar {
-            padding: 15px;
-            background: var(--card);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #2b3139;
-        }
-
-        /* Mobile Responsive Grid */
-        .main-container {
-            display: grid;
-            grid-template-columns: 1fr; /* Default for Mobile */
-            gap: 10px;
-            padding: 10px;
-        }
-
-        /* Desktop view over 900px */
-        @media (min-width: 900px) {
-            .main-container {
-                grid-template-columns: 300px 1fr 300px;
-                height: calc(100vh - 70px);
-            }
-        }
-
-        .box {
-            background: var(--card);
-            border-radius: 12px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .tabs {
-            display: flex;
-            background: #2b3139;
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            background: none;
-            color: #848e9c;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .tab-btn.active {
-            color: var(--accent);
-            border-bottom: 2px solid var(--accent);
-            background: var(--card);
-        }
-
-        .asset-list {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .asset-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px;
-            border-bottom: 1px solid #2b3139;
-        }
-
-        .chart-container {
-            height: 400px; /* Specific height for mobile */
-        }
-
-        @media (min-width: 900px) {
-            .chart-container { height: auto; flex-grow: 1; }
-            .asset-list { max-height: none; }
-        }
-
-        .order-panel { padding: 20px; }
-
-        .btn-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .btn {
-            padding: 15px;
-            border-radius: 8px;
-            border: none;
-            font-weight: bold;
-            color: white;
-        }
-
-        .buy { background: var(--green); }
-        .sell { background: var(--red); }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            margin-top: 8px;
-            background: #2b3139;
-            border: 1px solid #474d57;
-            color: white;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
+        body { background: #0b0e11; color: white; font-family: sans-serif; margin: 0; padding: 20px; }
+        .card { background: #1e2329; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #2b3139; }
+        .accent { color: #f0b90b; }
+        button { background: #f0b90b; border: none; padding: 10px; border-radius: 5px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-
-    <div class="navbar">
-        <div style="font-weight: bold; color: var(--accent);">G-TERMINAL</div>
-        <div style="font-size: 0.8rem; color: var(--green);">● Online</div>
+    <div class="card">
+        <h2>Balance: <span class="accent" id="bal">$0.00</span></h2>
+        <p>KYC: <span id="kyc" style="color:#f6465d;">PENDING</span></p>
     </div>
 
-    <div class="main-container">
-        <div class="box">
-            <div class="tabs">
-                <button class="tab-btn active" onclick="loadAssets('crypto')">CRYPTO</button>
-                <button class="tab-btn" onclick="loadAssets('forex')">FOREX</button>
-                <button class="tab-btn" onclick="loadAssets('metals')">METALS</button>
-            </div>
-            <div class="asset-list" id="assetList"></div>
-        </div>
-
-        <div class="box chart-container" id="chart-box">
-            <div id="tradingview_widget" style="height: 100%;"></div>
-        </div>
-
-        <div class="box order-panel">
-            <h4 style="margin: 0 0 10px 0;">Trade Instantly</h4>
-            <input type="number" placeholder="Amount (USDT)">
-            <div class="btn-group">
-                <button class="btn buy">BUY</button>
-                <button class="btn sell">SELL</button>
-            </div>
-        </div>
+    <div class="card">
+        <h3>Deposit Funds</h3>
+        <select id="pay-method" onchange="loadAddress()" style="width:100%; padding:10px; margin-bottom:10px; background:#2b3139; color:white;">
+            <option value="jazzcash">JazzCash</option>
+            <option value="easypaisa">EasyPaisa</option>
+            <option value="trc20">USDT (TRC20)</option>
+        </select>
+        <p style="font-size:0.8rem; color:#848e9c;">Send to: <strong id="addr" class="accent">Loading...</strong></p>
     </div>
 
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-    <script>
-        // Real TradingView Widget
-        new TradingView.widget({
-            "autosize": true,
-            "symbol": "BINANCE:BTCUSDT",
-            "interval": "H",
-            "theme": "dark",
-            "style": "1",
-            "locale": "en",
-            "container_id": "tradingview_widget",
-            "hide_top_toolbar": true,
-            "hide_legend": true
+    <div class="card">
+        <h3>Invite Friends</h3>
+        <button onclick="shareLink()">Copy Referral Link</button>
+    </div>
+
+<script>
+    const firebaseConfig = { apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", authDomain: "trade-for-profit-8b160.firebaseapp.com", databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", projectId: "trade-for-profit-8b160", storageBucket: "trade-for-profit-8b160.firebasestorage.app", messagingSenderId: "1077014018991", appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    auth.onAuthStateChanged(user => {
+        if(!user) window.location.href = "login.html";
+        db.ref('users/' + user.uid).on('value', snap => {
+            const d = snap.val();
+            document.getElementById('bal').innerText = "$" + (d.balance || 0);
+            document.getElementById('kyc').innerText = d.kyc_status;
+            window.myCode = d.referral_code;
         });
+    });
 
-        const assets = {
-            crypto: ["BTC/USDT", "ETH/USDT", "SOL/USDT", "XRP/USDT", "BNB/USDT"],
-            forex: ["EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD", "USD/CAD"],
-            metals: ["GOLD", "SILVER", "OIL", "GAS", "COPPER"]
-        };
+    function loadAddress() {
+        const m = document.getElementById('pay-method').value;
+        db.ref('admin_settings/payments/' + m).on('value', s => {
+            document.getElementById('addr').innerText = s.val() || "Not Set";
+        });
+    }
 
-        function loadAssets(type) {
-            const list = document.getElementById('assetList');
-            list.innerHTML = '';
-            
-            // Tab highlight logic
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
-
-            assets[type].forEach(name => {
-                list.innerHTML += `
-                    <div class="asset-item">
-                        <span>${name}</span>
-                        <span style="color: var(--green)">+${(Math.random()*3).toFixed(2)}%</span>
-                    </div>`;
-            });
-        }
-        loadAssets('crypto');
-    </script>
+    function shareLink() {
+        const link = window.location.origin + "/register.html?ref=" + window.myCode;
+        navigator.clipboard.writeText(link);
+        alert("Link Copied!");
+    }
+    loadAddress();
+</script>
 </body>
-    </html>
-        
+  
+</html>
