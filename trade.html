@@ -2,15 +2,149 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-Terminal PRO</title>
+    <title>Trade Pro Terminal</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <script src="https://unpkg.com/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    
     <style>
         :root { --bg: #060708; --card: #131722; --yellow: #f0b90b; --green: #00c805; --red: #ff3b30; --text: #d1d4dc; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 8px; overflow: hidden; }
-        .top-bar { display: flex; justify-content: space-between; padding: 10px; background: var(--card); border-radius: 8px; margin-bottom: 8px; border: 1px solid #2a2e39; font-size: 14px; }
-        #chart-container { height: 350px; width: 100%; background: var(--card); border-radius: 12px; position: relative; border: 1px solid #2a2e39; }
-        .price-tag { position: absolute; top: 15px; left: 15px; z-index: 10; font-size: 1.8rem; font-weight: bold; font-family: monospace
-                    
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 10px; overflow: hidden; }
+        .top-bar { display: flex; justify-content: space-between; padding: 12px; background: var(--card); border-radius: 8px; margin-bottom: 10px; border: 1px solid #2a2e39; }
+        #chart-container { height: 350px; width: 100%; background: #131722; border-radius: 12px; position: relative; border: 1px solid #2a2e39; }
+        .price-tag { position: absolute; top: 15px; left: 15px; z-index: 10; font-size: 1.8rem; font-weight: bold; font-family: monospace; }
+        .controls { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 10px; border: 1px solid #2a2e39; }
+        .input-box { background: #1e222d; border: 1px solid #363c4e; color: white; padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; margin: 5px 0; outline: none; }
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        .btn { flex: 1; padding: 16px; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 1rem; cursor: pointer; }
+        .up { background: var(--green); } .down { background: var(--red); }
+        #res-box { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+    </style>
+</head>
+<body>
+
+    <div id="res-box">
+        <h1 id="res-msg" style="font-size:3rem; margin:0;"></h1>
+        <h2 id="res-amt" style="color:var(--yellow); margin: 20px 0;"></h2>
+        <button onclick="location.reload()" style="padding:12px 50px; background:var(--yellow); border:none; border-radius:8px; font-weight:bold;">NEXT TRADE</button>
+    </div>
+
+    <div class="top-bar">
+        <div>Asset: <span id="asset-name" style="color:var(--yellow)">BTC/USDT</span></div>
+        <div>Bal: <span id="top-bal" style="color:var(--yellow)">$0.00</span></div>
+    </div>
+
+    <div id="chart-container"><div class="price-tag" id="price-main">0.00</div></div>
+
+    <div class="controls">
+        <div id="timer-txt" style="text-align:center; font-weight:bold; color:var(--yellow); margin-bottom:5px;">Market Active</div>
+        <div style="display: flex; gap: 10px;">
+            <select class="input-box" id="asset-sel" style="flex: 2;">
+                <option value="BTC">Bitcoin (BTC)</option>
+                <option value="ETH">Ethereum (ETH)</option>
+            </select>
+            <select class="input-box" id="trade-time" style="flex: 1;">
+                <option value="60">1 Min</option>
+                <option value="300">5 Min</option>
+            </select>
+        </div>
+        <input type="number" id="trade-amt" class="input-box" placeholder="Amount ($)" value="10">
+        <div class="btn-group">
+            <button class="btn up" id="u-btn" onclick="runTrade('UP')">UP</button>
+            <button class="btn down" id="d-btn" onclick="runTrade('DOWN')">DOWN</button>
+        </div>
+    </div>
+
+<script>
+    // --- Config ---
+    const firebaseConfig = { apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", authDomain: "trade-for-profit-8b160.firebaseapp.com", databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", projectId: "trade-for-profit-8b160", storageBucket: "trade-for-profit-8b160.firebasestorage.app", messagingSenderId: "1077014018991", appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    // --- Chart Fix ---
+    const chart = LightweightCharts.createChart(document.getElementById('chart-container'), {
+        layout: { backgroundColor: '#131722', textColor: '#d1d4dc' },
+        grid: { vertLines: { visible: false }, horzLines: { color: '#2a2e39' } },
+        timeScale: { timeVisible: true, secondsVisible: true }
+    });
+    const candleSeries = chart.addCandlestickSeries({ upColor: '#00c805', downColor: '#ff3b30' });
+
+    let currentPrice = 65420.50;
+    let isActive = false;
+    let userDir = "";
+    let adminMode = "NORMAL";
+    let timeLeft = 0;
+    let entryPrice = 0;
+
+    // --- Engine ---
+    setInterval(() => {
+        let open = currentPrice;
+        let drift = (Math.random() - 0.5) * 3; // Smooth drift
+
+        if (isActive) {
+            let pwr = (timeLeft < 6) ? 8 : 1.5; // Manipulation force
+            if (adminMode === "WIN") drift = (userDir === 'UP') ? Math.abs(drift) + pwr : -Math.abs(drift) - pwr;
+            if (adminMode === "LOSS") drift = (userDir === 'UP') ? -Math.abs(drift) - pwr : Math.abs(drift) + pwr;
+        }
+
+        currentPrice += drift;
+        const now = Math.floor(Date.now() / 1000);
+        const cTime = Math.floor(now / 60) * 60; // 1-Min Candle Fix
+
+        candleSeries.update({ time: cTime, open: open, high: Math.max(open, currentPrice) + 0.3, low: Math.min(open, currentPrice) - 0.3, close: currentPrice });
+        document.getElementById('price-main').innerText = currentPrice.toFixed(2);
+        document.getElementById('price-main').style.color = currentPrice >= open ? "#00c805" : "#ff3b30";
+    }, 1000);
+
+    // --- Functions ---
+    auth.onAuthStateChanged(u => {
+        if(u) db.ref('users/'+u.uid).on('value', s => {
+            const d = s.val();
+            document.getElementById('top-bal').innerText = "$" + (d.balance || 0).toFixed(2);
+            adminMode = d.control || "NORMAL";
+        });
+    });
+
+    function runTrade(dir) {
+        const u = auth.currentUser;
+        const amt = parseFloat(document.getElementById('trade-amt').value);
+        if(!u || isNaN(amt)) return alert("Error!");
+
+        db.ref('users/'+u.uid).once('value', s => {
+            const bal = s.val().balance || 0;
+            if(amt > bal) return alert("Low Balance!");
+
+            isActive = true; userDir = dir; entryPrice = currentPrice;
+            timeLeft = parseInt(document.getElementById('trade-time').value);
+            db.ref('users/'+u.uid).update({ balance: bal - amt });
+            document.getElementById('u-btn').disabled = document.getElementById('d-btn').disabled = true;
+
+            const timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer-txt').innerText = "Ends in: " + timeLeft + "s";
+                if(timeLeft <= 0) {
+                    clearInterval(timer);
+                    finish(u.uid, dir, amt, bal);
+                }
+            }, 1000);
+        });
+    }
+
+    function finish(uid, dir, amt, oldB) {
+        let win = (adminMode === "WIN") ? true : (adminMode === "LOSS") ? false : (dir === 'UP' ? currentPrice > entryPrice : currentPrice < entryPrice);
+        if(win) {
+            db.ref('users/'+uid).update({ balance: (oldB - amt) + (amt * 1.85) });
+            document.getElementById('res-msg').innerText = "PROFIT!";
+            document.getElementById('res-amt').innerText = "+$" + (amt * 0.85).toFixed(2);
+        } else {
+            document.getElementById('res-msg').innerText = "LOSS!";
+            document.getElementById('res-amt').innerText = "-$" + amt.toFixed(2);
+        }
+        document.getElementById('res-box').style.display = "flex";
+    }
+</script>
+</body>
+            </html>
+                
