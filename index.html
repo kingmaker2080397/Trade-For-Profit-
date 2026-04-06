@@ -1,39 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trade For Profit</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-Terminal | Dashboard</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
-        body { background: #0b0e11; color: white; font-family: sans-serif; padding: 20px; }
-        .card { background: #1e2329; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #2b3139; }
-        .accent { color: #f0b90b; font-weight: bold; }
-        .status { color: #f6465d; }
-        select { width: 100%; padding: 12px; background: #2b3139; color: white; border: 1px solid #474d57; border-radius: 8px; margin-top: 10px; }
-        .btn { width: 100%; padding: 15px; background: #f0b90b; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        :root { --bg: #0b0e11; --card: #1e2329; --yellow: #f0b90b; --text: #ffffff; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 15px; }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #2b3139; }
+        .balance { font-size: 2.5rem; font-weight: bold; color: var(--yellow); margin: 10px 0; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .menu-item { background: #2b3139; padding: 15px; border-radius: 10px; text-align: center; text-decoration: none; color: white; font-weight: bold; }
+        select, button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; border: none; font-weight: bold; }
+        button { background: var(--yellow); cursor: pointer; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>Balance: <span class="accent" id="bal">Loading...</span></h2>
-        <p>KYC: <span id="kyc" class="status">Checking...</span></p>
-    </div>
 
     <div class="card">
-        <h3>Deposit Funds</h3>
-        <select id="method" onchange="loadAddr()">
+        <p style="color: #848e9c; margin: 0;">Total Balance</p>
+        <div class="balance" id="display-bal">$0.00</div>
+        <p>Status: <span id="display-kyc" style="color: #f6465d;">Checking...</span></p>
+    </div>
+
+    <div class="grid">
+        <a href="trade.html" class="menu-item">📊 Live Trade</a>
+        <a href="kyc.html" class="menu-item">🆔 KYC Verify</a>
+        <a href="withdraw.html" class="menu-item">💰 Withdraw</a>
+        <a href="chat.html" class="menu-item">💬 Live Chat</a>
+    </div>
+
+    <div class="card" style="margin-top: 15px;">
+        <h3>Deposit (Min: 3000 PKR / $10)</h3>
+        <select id="method" onchange="updateAddr()">
             <option value="easypaisa">EasyPaisa</option>
             <option value="jazzcash">JazzCash</option>
             <option value="trc20">USDT (TRC20)</option>
         </select>
-        <p style="margin-top:15px; font-size:0.9rem; color:#848e9c;">Send to: <strong id="addr" class="accent">03442585087</strong></p>
-    </div>
-
-    <div class="card">
-        <h3>Invite Friends</h3>
-        <button class="btn" onclick="copyRef()">Copy Referral Link</button>
+        <p style="background: #000; padding: 10px; border: 1px dashed var(--yellow); text-align: center; margin-top: 10px;" id="admin-addr">Loading...</p>
+        <button onclick="copyRef()">Invite & Earn Bonus</button>
     </div>
 
     <script>
@@ -47,38 +55,42 @@
             appId: "1:1077014018991:web:c41320e2ef10291afd4d5a"
         };
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
         const auth = firebase.auth();
+        const db = firebase.database();
 
-        firebase.auth().onAuthStateChanged(user => {
-    if (user) {
-        // User login hai, uska data fetch karo
-        firebase.database().ref('users/' + user.uid).on('value', snap => {
-            const data = snap.val();
-            if(data) {
-                document.getElementById('bal').innerText = "$" + data.balance;
-                document.getElementById('kyc').innerText = data.kyc_status;
-            }
-        });
-    } else {
-        // Agar login nahi hai toh login page par bhejo
-        window.location.href = "login.html";
-    }
-});
-        
+        auth.onAuthStateChanged(user => {
+            if(user) {
+                db.ref('users/' + user.uid).on('value', snap => {
+                    let d = snap.val();
+                    if(!d) {
+                        // Naya User Bonus Logic
+                        db.ref('users/' + user.uid).set({
+                            balance: 1.0, 
+                            kyc_status: "NOT_VERIFIED",
+                            email: user.email,
+                            control: "NORMAL",
+                            referral_code: "GT-" + user.uid.substring(0,5).toUpperCase()
+                        });
+                    } else {
+                        document.getElementById('display-bal').innerText = "$" + parseFloat(d.balance).toFixed(2);
+                        document.getElementById('display-kyc').innerText = d.kyc_status;
+                        window.myRef = d.referral_code;
+                    }
+                });
             } else { window.location.href = "login.html"; }
         });
 
-        function loadAddr() {
+        function updateAddr() {
             const m = document.getElementById('method').value;
             db.ref('admin_settings/payments/' + m).on('value', s => {
-                if(s.val()) document.getElementById('addr').innerText = s.val();
+                document.getElementById('admin-addr').innerText = s.val() || "Not Set By Admin";
             });
         }
+        updateAddr();
 
         function copyRef() {
-            const link = window.location.origin + "/register.html?ref=" + window.myCode;
-            navigator.clipboard.writeText(link); alert("Link Copied!");
+            navigator.clipboard.writeText(window.location.origin + "/register.html?ref=" + window.myRef);
+            alert("Referral link copied!");
         }
     </script>
 </body>
