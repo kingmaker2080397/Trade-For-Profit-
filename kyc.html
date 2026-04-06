@@ -7,86 +7,61 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
-        :root { --bg: #0b0e11; --card: #1e2329; --yellow: #f0b90b; --green: #02c076; --text: #ffffff; }
+        :root { --bg: #0b0e11; --card: #1e2329; --yellow: #f0b90b; --text: #ffffff; }
         body { background: var(--bg); color: var(--text); font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
         .box { background: var(--card); padding: 30px; border-radius: 15px; width: 100%; max-width: 400px; border: 1px solid #2b3139; text-align: center; }
-        h2 { color: var(--yellow); margin-bottom: 10px; }
-        p { color: #848e9c; font-size: 0.9rem; margin-bottom: 20px; }
         input { width: 100%; padding: 12px; margin: 10px 0; background: #2b3139; border: 1px solid #474d57; color: white; border-radius: 8px; box-sizing: border-box; outline: none; }
-        .file-label { display: block; background: #2b3139; border: 1px dashed #474d57; color: #848e9c; padding: 20px; border-radius: 8px; cursor: pointer; margin-top: 15px; font-size: 0.9rem; }
-        .file-label:hover { border-color: var(--yellow); color: var(--yellow); }
-        #file-input { display: none; } /* Hide the real file input */
-        #preview { width: 100px; height: auto; margin-top: 10px; border-radius: 5px; display: none; }
-        .btn-submit { width: 100%; padding: 15px; background: var(--yellow); color: black; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: 20px; }
+        .btn-submit { width: 100%; padding: 15px; background: var(--yellow); color: black; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .status-msg { padding: 20px; border: 1px dashed var(--yellow); border-radius: 10px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div class="box">
+<div class="box" id="kyc-container">
     <h2>Verify KYC</h2>
-    <p>Submit your CNIC documents for verification.</p>
-    
-    <input type="text" id="name" placeholder="Full Name (As per CNIC)">
-    <input type="text" id="cnic" placeholder="CNIC Number (42401-XXXXXXX-X)">
-    
-    <label for="file-input" class="file-label">
-        📁 Click to Upload CNIC Front Image<br>
-        <span style="font-size: 0.8rem;">(Max size: 2MB)</span>
-    </label>
-    <input type="file" id="file-input" accept="image/*" onchange="previewImage(event)">
-    <img id="preview" src="#" alt="CNIC Preview">
-
-    <button class="btn-submit" onclick="submitKYC()">Submit Verification</button>
-    <br>
-    <a href="index.html" style="color: #848e9c; text-decoration: none; font-size: 0.8rem; display: block; margin-top: 15px;">Back to Dashboard</a>
+    <div id="kyc-form">
+        <p style="color:#848e9c">Upload CNIC details to enable withdrawals.</p>
+        <input type="text" id="name" placeholder="Full Name">
+        <input type="text" id="cnic" placeholder="CNIC Number">
+        <input type="file" id="file-input" accept="image/*" style="border:none;">
+        <button class="btn-submit" onclick="submitKYC()">Submit Verification</button>
+    </div>
 </div>
 
 <script>
-    // 1. Firebase Configuration (Copy/Paste this from your index.html)
     const firebaseConfig = { apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", authDomain: "trade-for-profit-8b160.firebaseapp.com", databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", projectId: "trade-for-profit-8b160", storageBucket: "trade-for-profit-8b160.firebasestorage.app", messagingSenderId: "1077014018991", appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
 
-    // Image preview logic
-    let imageData = null;
-    function previewImage(event) {
-        const file = event.target.files[0];
-        if (file) {
-            if (file.size > 2 * 1024 * 1024) return alert("File too large! Max 2MB.");
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('preview').src = e.target.result;
-                document.getElementById('preview').style.display = "block";
-                imageData = e.target.result; // Store base64 data to save in database
-            };
-            reader.readAsDataURL(file);
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            db.ref('users/' + user.uid).on('value', snap => {
+                const d = snap.val();
+                if (d && (d.kyc_status === "PENDING" || d.kyc_status === "APPROVED")) {
+                    document.getElementById('kyc-container').innerHTML = `
+                        <div class="status-msg">
+                            <h2 style="color:var(--yellow)">Already Verified</h2>
+                            <p>Your KYC status is: <b>${d.kyc_status}</b></p>
+                            <p style="font-size:0.8rem">You cannot resubmit while pending or approved.</p>
+                            <a href="index.html" style="color:var(--yellow); text-decoration:none; font-weight:bold;">← Back to Dashboard</a>
+                        </div>`;
+                }
+            });
         }
-    }
+    });
 
-    // Submit KYC logic
     function submitKYC() {
         const user = auth.currentUser;
-        if (!user) return alert("Please Login!");
-
         const name = document.getElementById('name').value;
         const cnic = document.getElementById('cnic').value;
-        if (!name || !cnic || !imageData) return alert("All fields are required!");
+        if(!name || !cnic) return alert("Fill all fields!");
 
-        // Update Database (kirloskar system connect)
         db.ref('users/' + user.uid).update({
             kyc_status: "PENDING",
-            kyc_data: {
-                name: name, cnic: cnic,
-                image: imageData, // Save base64 image data directly in Realtime Database
-                submitted_at: Date.now()
-            }
-        }).then(() => {
-            alert("KYC Submitted Successfully! Review time is 24h.");
-            window.location.href = "index.html";
-        }).catch(err => alert("Error: " + err.message));
+            kyc_data: { name: name, cnic: cnic, submitted_at: Date.now() }
+        }).then(() => { alert("Submitted!"); window.location.reload(); });
     }
 </script>
-
 </body>
 </html>
