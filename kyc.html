@@ -1,50 +1,180 @@
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-Terminal | Verify KYC</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-Terminal | Secure KYC Verification</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
-        :root { --bg: #0b0e11; --card: #1e2329; --yellow: #f0b90b; --text: #ffffff; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-        .box { background: var(--card); padding: 30px; border-radius: 15px; width: 100%; max-width: 400px; border: 1px solid #2b3139; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; background: #2b3139; border: 1px solid #474d57; color: white; border-radius: 8px; box-sizing: border-box; outline: none; }
-        .btn-submit { width: 100%; padding: 15px; background: var(--yellow); color: black; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; }
-        .status-msg { padding: 20px; border: 1px dashed var(--yellow); border-radius: 10px; margin-top: 10px; }
+        :root { 
+            --bg: #0b0e11; 
+            --card: #1e2329; 
+            --yellow: #fcd535; 
+            --text-main: #eaecef;
+            --text-muted: #848e9c;
+            --input-focus: rgba(252, 213, 53, 0.15);
+        }
+
+        body { 
+            background: var(--bg); 
+            color: var(--text-main); 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            padding: 20px; 
+            box-sizing: border-box; 
+        }
+
+        .kyc-box { 
+            background: var(--card); 
+            padding: 35px 25px; 
+            border-radius: 24px; 
+            width: 100%; 
+            max-width: 420px; 
+            border: 1px solid rgba(255,255,255,0.05); 
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .icon-header {
+            width: 60px;
+            height: 60px;
+            background: rgba(252, 213, 53, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: var(--yellow);
+            font-size: 24px;
+        }
+
+        h2 { margin: 0 0 10px; font-size: 24px; font-weight: 800; }
+        .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 25px; line-height: 1.5; }
+
+        .form-group { text-align: left; margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; margin-left: 5px; }
+
+        input[type="text"] { 
+            width: 100%; 
+            padding: 14px 16px; 
+            background: #2b3139; 
+            border: 1px solid #474d57; 
+            color: white; 
+            border-radius: 12px; 
+            box-sizing: border-box; 
+            outline: none; 
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus { 
+            border-color: var(--yellow); 
+            box-shadow: 0 0 0 4px var(--input-focus);
+        }
+
+        /* Custom File Upload Look */
+        .file-upload-box {
+            border: 2px dashed #474d57;
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.3s;
+            background: rgba(255,255,255,0.02);
+        }
+        .file-upload-box:hover { border-color: var(--yellow); background: rgba(252, 213, 53, 0.05); }
+        input[type="file"] { display: none; }
+
+        .btn-submit { 
+            width: 100%; 
+            padding: 16px; 
+            background: var(--yellow); 
+            color: black; 
+            border: none; 
+            border-radius: 12px; 
+            font-weight: 800; 
+            font-size: 16px;
+            cursor: pointer; 
+            margin-top: 25px; 
+            transition: transform 0.2s;
+        }
+        .btn-submit:active { transform: scale(0.98); }
+
+        .status-msg { 
+            padding: 30px 20px; 
+            border: 1px solid rgba(252, 213, 53, 0.2); 
+            background: rgba(252, 213, 53, 0.05);
+            border-radius: 20px; 
+        }
+
+        .footer-note { font-size: 11px; color: var(--text-muted); margin-top: 20px; }
     </style>
 </head>
 <body>
 
-<div class="box" id="kyc-container">
-    <h2>Verify KYC</h2>
+<div class="kyc-box" id="kyc-container">
+    <div class="icon-header">🛡️</div>
+    <h2>Verify Identity</h2>
+    <p class="subtitle">To ensure security and enable withdrawals, please provide your CNIC details.</p>
+    
     <div id="kyc-form">
-        <p style="color:#848e9c">Upload CNIC details to enable withdrawals.</p>
-        <input type="text" id="name" placeholder="Full Name">
-        <input type="text" id="cnic" placeholder="CNIC Number">
-        <input type="file" id="file-input" accept="image/*" style="border:none;">
+        <div class="form-group">
+            <label>FULL NAME (As per CNIC)</label>
+            <input type="text" id="name" placeholder="M. Hussain">
+        </div>
+        
+        <div class="form-group">
+            <label>CNIC NUMBER</label>
+            <input type="text" id="cnic" placeholder="42101-XXXXXXX-X">
+        </div>
+
+        <div class="form-group">
+            <label>CNIC PHOTO (Front Side)</label>
+            <label for="file-input" class="file-upload-box" id="file-label">
+                <span style="font-size: 20px; display: block;">📤</span>
+                <span style="font-size: 13px; color: var(--text-muted);" id="file-name">Click to upload image</span>
+            </label>
+            <input type="file" id="file-input" accept="image/*" onchange="updateFileName(this)">
+        </div>
+
         <button class="btn-submit" onclick="submitKYC()">Submit Verification</button>
+        <p class="footer-note">🔒 Your data is encrypted and secure.</p>
     </div>
 </div>
 
 <script>
+    // Firebase Config
     const firebaseConfig = { apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", authDomain: "trade-for-profit-8b160.firebaseapp.com", databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", projectId: "trade-for-profit-8b160", storageBucket: "trade-for-profit-8b160.firebasestorage.app", messagingSenderId: "1077014018991", appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
+
+    function updateFileName(input) {
+        const fileName = input.files[0] ? input.files[0].name : "Click to upload image";
+        document.getElementById('file-name').innerText = fileName;
+        document.getElementById('file-label').style.borderColor = "var(--yellow)";
+    }
 
     auth.onAuthStateChanged(user => {
         if (user) {
             db.ref('users/' + user.uid).on('value', snap => {
                 const d = snap.val();
                 if (d && (d.kyc_status === "PENDING" || d.kyc_status === "APPROVED")) {
+                    const color = d.kyc_status === "APPROVED" ? "#0ecb81" : "var(--yellow)";
                     document.getElementById('kyc-container').innerHTML = `
                         <div class="status-msg">
-                            <h2 style="color:var(--yellow)">Already Verified</h2>
-                            <p>Your KYC status is: <b>${d.kyc_status}</b></p>
-                            <p style="font-size:0.8rem">You cannot resubmit while pending or approved.</p>
-                            <a href="index.html" style="color:var(--yellow); text-decoration:none; font-weight:bold;">← Back to Dashboard</a>
+                            <div style="font-size: 40px; margin-bottom: 15px;">${d.kyc_status === "APPROVED" ? '✅' : '⏳'}</div>
+                            <h2 style="color:${color}">${d.kyc_status}</h2>
+                            <p style="color:var(--text-muted); font-size: 14px;">Your verification is currently <b>${d.kyc_status.toLowerCase()}</b>.</p>
+                            <p style="font-size:0.75rem; color:#666; margin-top:20px;">You will be notified once our team reviews your documents.</p>
+                            <br>
+                            <a href="index.html" style="display:inline-block; padding: 12px 25px; background:#2b3139; color:white; text-decoration:none; border-radius:10px; font-weight:bold; font-size:13px;">Back to Dashboard</a>
                         </div>`;
                 }
             });
@@ -55,13 +185,33 @@
         const user = auth.currentUser;
         const name = document.getElementById('name').value;
         const cnic = document.getElementById('cnic').value;
-        if(!name || !cnic) return alert("Fill all fields!");
+        
+        if(!name || !cnic) {
+            alert("Please fill in all identity details.");
+            return;
+        }
+
+        const btn = document.querySelector('.btn-submit');
+        btn.innerText = "Processing...";
+        btn.disabled = true;
 
         db.ref('users/' + user.uid).update({
             kyc_status: "PENDING",
-            kyc_data: { name: name, cnic: cnic, submitted_at: Date.now() }
-        }).then(() => { alert("Submitted!"); window.location.reload(); });
+            kyc_data: { 
+                name: name, 
+                cnic: cnic, 
+                submitted_at: Date.now() 
+            }
+        }).then(() => { 
+            alert("Application Submitted Successfully!"); 
+            window.location.reload(); 
+        }).catch(err => {
+            alert("Error: " + err.message);
+            btn.innerText = "Submit Verification";
+            btn.disabled = false;
+        });
     }
 </script>
 </body>
-</html>
+    </html>
+    
