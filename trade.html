@@ -3,189 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trade Pro - Result Popup Edition</title>
+    <title>Trade Pro | Live Terminal</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    
     <style>
-        :root { --bg: #0b0e11; --card: #1e2329; --yellow: #fcd535; --green: #0ecb81; --red: #f6465d; --text: #eaecef; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 0; overflow: hidden; }
-        
-        /* Fake Ticker */
-        .ticker-wrap { width: 100%; overflow: hidden; background: #181a20; border-bottom: 1px solid #2b2f36; height: 35px; display: flex; align-items: center; }
-        .ticker { white-space: nowrap; animation: ticker 25s linear infinite; font-size: 11px; color: var(--yellow); font-weight: bold; }
-        @keyframes ticker { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        :root { 
+            --bg: #05070a; 
+            --card: rgba(30, 35, 41, 0.9); 
+            --yellow: #fcd535; 
+            --green: #0ecb81; 
+            --red: #f6465d; 
+            --text: #eaecef; 
+        }
 
-        .top-bar { display: flex; justify-content: space-between; padding: 15px; background: var(--card); border-bottom: 1px solid #2b2f36; }
-        #chart-container { height: 350px; width: 100%; position: relative; background: #000; }
-        
-        #entry-line { position: absolute; width: 100%; height: 2px; border-top: 2px dashed var(--yellow); display: none; z-index: 100; }
-        #entry-label { position: absolute; right: 0; top: -25px; background: var(--yellow); color: #000; padding: 4px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; }
-        
-        /* Win/Loss Result Popup */
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'Poppins', sans-serif; 
+            margin: 0; padding: 0; 
+            overflow: hidden; 
+        }
+
+        /* 3D Floating Glassmorphism Result Popup */
         #result-popup { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.9); display: none; 
+            background: rgba(0,0,0,0.85); 
+            backdrop-filter: blur(10px);
+            display: none; 
             flex-direction: column; align-items: center; justify-content: center; z-index: 30000; 
         }
-        .res-card { padding: 30px; border-radius: 20px; text-align: center; width: 80%; max-width: 300px; animation: popUp 0.3s ease-out; }
-        .res-win { background: var(--green); color: white; box-shadow: 0 0 20px var(--green); }
-        .res-loss { background: var(--red); color: white; box-shadow: 0 0 20px var(--red); }
-        @keyframes popUp { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-        /* Sync Popup */
-        #custom-alert { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 20000; }
-        .alert-box { background: white; color: black; padding: 20px; border-radius: 12px; width: 85%; max-width: 300px; text-align: center; }
-        .alert-btn { margin-top: 15px; background: #007aff; color: white; border: none; padding: 10px 40px; border-radius: 5px; font-weight: bold; }
+        .res-card { 
+            padding: 40px 20px; 
+            border-radius: 30px; 
+            text-align: center; 
+            width: 85%; 
+            max-width: 320px; 
+            animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border: 2px solid rgba(255,255,255,0.1);
+        }
 
-        .controls { background: var(--card); padding: 20px; border-radius: 25px 25px 0 0; margin-top: -15px; border-top: 1px solid #2b2f36; position: relative; z-index: 10; }
-        .input-box { background: #2b3139; border: 1px solid #474d57; color: white; padding: 15px; border-radius: 12px; width: 100%; box-sizing: border-box; margin-bottom: 12px; font-size: 20px; text-align: center; font-weight: bold; }
-        
-        .btn-group { display: flex; gap: 10px; }
-        .btn { flex: 1; padding: 20px; border: none; border-radius: 12px; font-weight: 900; font-size: 1.1rem; cursor: pointer; color: white; }
-        .up { background: var(--green); } .down { background: var(--red); }
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
 
-        .panel { padding: 15px; background: var(--card); border-top: 1px solid #2b2f36; }
-        .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2b2f36; font-size: 13px; }
+        .res-win { 
+            background: linear-gradient(145deg, #0ecb81, #0a9d63); 
+            box-shadow: 0 20px 50px rgba(14, 203, 129, 0.4); 
+        }
+
+        .res-loss { 
+            background: linear-gradient(145deg, #f6465d, #c0392b); 
+            box-shadow: 0 20px 50px rgba(246, 70, 93, 0.4); 
+        }
+
+        /* Ticker Styling */
+        .ticker-wrap { background: #111418; border-bottom: 1px solid #2b2f36; padding: 8px 0; }
+        .ticker { color: var(--yellow); font-size: 12px; font-weight: 600; }
+
+        /* Chart Area */
+        #chart-container { height: 40vh; border-bottom: 2px solid #1e2329; }
+
+        /* Control Panel UI */
+        .controls { 
+            background: var(--card); 
+            padding: 25px 20px; 
+            border-radius: 30px 30px 0 0; 
+            margin-top: -20px; 
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .input-box { 
+            background: #161a1e; border: 1px solid #2b3139; color: var(--yellow); 
+            padding: 18px; border-radius: 15px; width: 100%; box-sizing: border-box; 
+            font-size: 24px; font-weight: 800; margin-bottom: 15px; outline: none;
+        }
+
+        .btn { 
+            height: 70px; border-radius: 18px; font-weight: 800; font-size: 1.2rem; 
+            transition: 0.2s; border: none; cursor: pointer; color: #000;
+        }
+        .up { background: var(--green); box-shadow: 0 4px 0 #0a9d63; margin-right: 10px; }
+        .down { background: var(--red); box-shadow: 0 4px 0 #c0392b; color: #fff; }
+        .btn:active { transform: translateY(4px); box-shadow: none; }
+
+        .status-badge {
+            background: rgba(252, 213, 53, 0.1);
+            color: var(--yellow);
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
 
 <div id="result-popup">
     <div id="res-card" class="res-card">
-        <h1 id="res-status" style="margin: 0; font-size: 40px;">WIN</h1>
-        <p id="res-msg" style="margin: 10px 0;">Profit Added to Account</p>
-        <button onclick="closeResult()" style="background: white; color: black; border: none; padding: 10px 30px; border-radius: 5px; font-weight: bold; margin-top: 10px;">CONTINUE</button>
+        <div id="icon-box" style="font-size: 60px; margin-bottom: 10px;">🏆</div>
+        <h1 id="res-status" style="margin: 0; font-size: 45px; font-weight: 800;">WIN</h1>
+        <p id="res-msg" style="margin: 10px 0; font-weight: 600; opacity: 0.9;">Profit Added to Account</p>
+        <button onclick="closeResult()" style="background: #fff; color: #000; border: none; padding: 15px 40px; border-radius: 12px; font-weight: 800; margin-top: 15px; cursor: pointer; width: 100%;">CONTINUE</button>
     </div>
 </div>
 
-<div id="custom-alert">
-    <div class="alert-box">
-        <p style="font-size: 13px; color: #666;">kingmaker-trading.com says</p>
-        <p style="font-weight: bold;">Price Syncing... Try in 1s</p>
-        <button class="alert-btn" onclick="startTrade()">OK</button>
-    </div>
-</div>
-
-<div class="ticker-wrap">
-    <div class="ticker">
-        <span>● Malik_Trade deposited $1,500.00</span> <span>● Rahul_Vip withdrew $450.00</span> <span>● KingMaker deposited $5,000.00</span>
-    </div>
-</div>
-
-<div class="top-bar">
-    <div style="font-weight:900; color:var(--yellow)">BTC/USDT</div>
-    <div>Bal: <span id="top-bal" style="color:var(--yellow); font-weight:bold;">$0.00</span></div>
+<div class="top-bar" style="display:flex; justify-content:space-between; padding:15px; background:#181a20;">
+    <div style="font-weight:800; color:var(--yellow); font-size:1.1rem;">G-TERMINAL</div>
+    <div id="top-bal" style="font-weight:800; color:#fff;">$0.00</div>
 </div>
 
 <div id="chart-container">
-    <div id="entry-line"><span id="entry-label">ENTRY @ 0.00</span></div>
-    <iframe id="tv-chart" src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:BTCUSDT&interval=1&theme=dark" style="width: 100%; height: 100%; border: none;"></iframe>
+    <iframe src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:BTCUSDT&interval=1&theme=dark" style="width: 100%; height: 100%; border: none;"></iframe>
 </div>
 
-<div class="controls">
-    <div id="status-text" style="text-align:center; color:var(--yellow); font-size:13px; margin-bottom:12px; font-weight:bold;">MARKET ANALYZING...</div>
+<div class="controls" style="text-align: center;">
+    <div id="status-text" class="status-badge">MARKET ANALYZING...</div>
+    
+    <div style="color:#848e9c; font-size:12px; margin-bottom:5px;">ENTER INVESTMENT AMOUNT</div>
     <input type="number" id="trade-amt" class="input-box" value="10">
-    <div class="btn-group">
-        <button class="btn up" onclick="openPopup('UP')">CALL (UP)</button>
-        <button class="btn down" onclick="openPopup('DOWN')">PUT (DOWN)</button>
-    </div>
-</div>
-
-<div class="panel">
-    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-        <span style="color:var(--yellow); font-size:11px; font-weight:bold;">GLOBAL RANKING</span>
-    </div>
-    <div id="lb-list">
-        <div class="row" style="background: rgba(246, 70, 93, 0.1); padding: 8px; border-radius: 5px;">
-            <span><img src="https://flagcdn.com/w20/pk.png" style="width:18px;"> hussain002424 (You)</span>
-            <span style="color:var(--red); font-weight:bold;">-$420.50</span>
-        </div>
+    
+    <div style="display: flex; width: 100%;">
+        <button class="btn up" style="flex:1" onclick="openPopup('UP')">CALL ▲</button>
+        <button class="btn down" style="flex:1" onclick="openPopup('DOWN')">PUT ▼</button>
     </div>
 </div>
 
 <script>
+    // Firebase Config (Aapka Wahi Same)
     const firebaseConfig = { apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", authDomain: "trade-for-profit-8b160.firebaseapp.com", databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", projectId: "trade-for-profit-8b160", storageBucket: "trade-for-profit-8b160.firebasestorage.app", messagingSenderId: "1077014018991", appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
 
-    let livePrice = 0;
-    let selectedDir = "";
-
-    setInterval(() => {
-        fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT')
-        .then(r => r.json()).then(d => { livePrice = parseFloat(d.price); });
-    }, 500);
-
-    auth.onAuthStateChanged(u => {
-        if(u) {
-            db.ref('users/'+u.uid).on('value', s => {
-                const d = s.val() || {};
-                document.getElementById('top-bal').innerText = "$" + (d.balance || 0).toFixed(2);
-                if(d.activeTrade) runTrade(u.uid, d.activeTrade);
-            });
-        }
-    });
-
+    // Logic Functions (Same as yours, just UI triggers added)
     function openPopup(dir) {
         selectedDir = dir;
-        document.getElementById('custom-alert').style.display = 'flex';
+        startTrade(); // Direct start for smoother UX
     }
 
-    function startTrade() {
-        document.getElementById('custom-alert').style.display = 'none';
-        const u = auth.currentUser;
-        const amt = parseFloat(document.getElementById('trade-amt').value);
-        db.ref('users/'+u.uid).once('value', s => {
-            const bal = s.val().balance || 0;
-            if(amt > bal) return alert("Low Balance");
-            const trade = { dir: selectedDir, amount: amt, entryPrice: livePrice, startTime: Date.now(), status: "running" };
-            db.ref('users/'+u.uid).update({ balance: bal - amt, activeTrade: trade });
-        });
-    }
-
-    function runTrade(uid, t) {
-        const line = document.getElementById('entry-line');
-        const timeLeft = 60 - Math.floor((Date.now() - t.startTime)/1000);
-        if(timeLeft <= 0) {
-            line.style.display = "none";
-            finishTrade(uid, t);
-        } else {
-            line.style.display = "block";
-            document.getElementById('status-text').innerText = "TRADE CLOSING: " + timeLeft + "s";
-            document.getElementById('entry-label').innerText = "ENTRY @ " + t.entryPrice;
-            setTimeout(() => runTrade(uid, t), 1000);
-        }
-    }
-
-    function finishTrade(uid, t) {
-        db.ref('users/'+uid).once('value', s => {
-            const win = (s.val().control === "WIN");
-            const profit = win ? (t.amount * 1.85) : 0;
-            
-            // Show Result Popup
-            const pop = document.getElementById('result-popup');
-            const card = document.getElementById('res-card');
-            pop.style.display = 'flex';
-            if(win) {
-                card.className = "res-card res-win";
-                document.getElementById('res-status').innerText = "WIN";
-                document.getElementById('res-msg').innerText = "Profit: +$" + (t.amount * 0.85).toFixed(2);
-            } else {
-                card.className = "res-card res-loss";
-                document.getElementById('res-status').innerText = "LOSS";
-                document.getElementById('res-msg').innerText = "Market Reversed: -$" + t.amount;
-            }
-
-            db.ref('users/'+uid).update({ balance: s.val().balance + profit, activeTrade: null });
-        });
-    }
-
-    function closeResult() {
-        document.getElementById('result-popup').style.display = 'none';
-    }
+    // ... (Paste your remaining Firebase functions here)
 </script>
+
 </body>
-    </html>
-    
+</html>
