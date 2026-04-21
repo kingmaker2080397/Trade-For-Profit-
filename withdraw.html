@@ -3,44 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Withdraw Funds | G-Terminal</title>
+    <title>Withdraw Funds | G-Terminal VIP</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
-        :root { --bg: #0b0e11; --card: #1e2329; --yellow: #f0b90b; --text: #ffffff; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
-        .box { background: var(--card); padding: 30px; border-radius: 15px; width: 100%; max-width: 400px; border: 1px solid #2b3139; text-align: center; }
-        h2 { color: var(--yellow); margin-bottom: 20px; }
-        .bal-display { background: #000; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--yellow); }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; background: #2b3139; border: 1px solid #474d57; color: white; border-radius: 8px; box-sizing: border-box; }
-        .btn-withdraw { width: 100%; padding: 15px; background: var(--yellow); color: black; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        :root { 
+            --bg: #0b0e11; 
+            --card: #1e2329; 
+            --yellow: #fcd535; 
+            --text-main: #eaecef;
+            --text-muted: #848e9c;
+            --input-bg: #2b3139;
+        }
+
+        body { 
+            background: var(--bg); 
+            color: var(--text-main); 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            box-sizing: border-box; 
+        }
+
+        .box { 
+            background: var(--card); 
+            padding: 30px; 
+            border-radius: 24px; 
+            width: 100%; 
+            max-width: 420px; 
+            border: 1px solid rgba(255,255,255,0.05); 
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .nav-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 25px; 
+        }
+        
+        .back-link { 
+            color: var(--text-muted); 
+            text-decoration: none; 
+            font-size: 13px; 
+            font-weight: 500;
+        }
+
+        h2 { font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
+
+        .bal-card { 
+            background: linear-gradient(145deg, #181a20, #0b0e11); 
+            padding: 25px; 
+            border-radius: 20px; 
+            margin: 25px 0; 
+            border: 1px solid rgba(252, 213, 53, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .bal-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(252,213,53,0.05) 0%, transparent 70%);
+        }
+
+        .bal-card small { color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-size: 10px; font-weight: 700; }
+        #current-bal { font-size: 32px; font-weight: 800; color: var(--yellow); margin-top: 5px; }
+
+        .input-group { text-align: left; margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; margin-left: 5px; }
+
+        input, select { 
+            width: 100%; 
+            padding: 14px 16px; 
+            background: var(--input-bg); 
+            border: 1px solid #474d57; 
+            color: white; 
+            border-radius: 12px; 
+            box-sizing: border-box; 
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus { border-color: var(--yellow); }
+
+        .btn-withdraw { 
+            width: 100%; 
+            padding: 16px; 
+            background: var(--yellow); 
+            color: black; 
+            border: none; 
+            border-radius: 14px; 
+            font-weight: 800; 
+            font-size: 16px;
+            cursor: pointer; 
+            margin-top: 15px;
+            transition: transform 0.2s;
+        }
+        .btn-withdraw:active { transform: scale(0.98); }
+
+        .note-box {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 20px;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: left;
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <a href="index.html" style="color: #848e9c; text-decoration: none; font-size: 0.8rem; float: left;">< Back</a>
-    <br>
-    <h2>Withdrawal</h2>
+    <div class="nav-header">
+        <a href="index.html" class="back-link">← Cancel</a>
+        <span>G-Terminal VIP</span>
+        <div style="width: 40px;"></div> </div>
     
-    <div class="bal-display">
-        <small style="color: #848e9c;">Available Balance</small>
-        <div id="current-bal" style="font-size: 1.5rem; font-weight: bold; color: var(--yellow);">$0.00</div>
+    <h2>Withdraw Funds</h2>
+    
+    <div class="bal-card">
+        <small>Total Available Balance</small>
+        <div id="current-bal">$0.00</div>
     </div>
 
-    <input type="number" id="w-amount" placeholder="Enter Amount ($)">
-    <select id="w-method">
-        <option value="EasyPaisa">EasyPaisa</option>
-        <option value="JazzCash">JazzCash</option>
-        <option value="USDT">USDT (TRC20)</option>
-    </select>
-    <input type="text" id="w-account" placeholder="Account Number / Address">
+    <div class="input-group">
+        <label>WITHDRAW AMOUNT ($)</label>
+        <input type="number" id="w-amount" placeholder="Min. $10.00">
+    </div>
+
+    <div class="input-group">
+        <label>PAYMENT METHOD</label>
+        <select id="w-method">
+            <option value="EasyPaisa">EasyPaisa</option>
+            <option value="JazzCash">JazzCash</option>
+            <option value="USDT">USDT (TRC20)</option>
+        </select>
+    </div>
+
+    <div class="input-group">
+        <label>ACCOUNT DETAILS / WALLET ADDRESS</label>
+        <input type="text" id="w-account" placeholder="Enter account details">
+    </div>
     
-    <button class="btn-withdraw" onclick="requestWithdraw()">Submit Request</button>
+    <button class="btn-withdraw" onclick="requestWithdraw()">Submit Withdrawal</button>
+
+    <div class="note-box">
+        <b>💡 Withdrawal Policy:</b>
+        <br>• Processing time: 2-24 hours.
+        <br>• Ensure KYC is verified before requesting.
+        <br>• USDT withdrawals are processed via TRC20 network only.
+    </div>
 </div>
 
 <script>
+    // Firebase Configuration
     const firebaseConfig = {
         apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU",
         authDomain: "trade-for-profit-8b160.firebaseapp.com",
@@ -72,17 +202,21 @@
         const amt = parseFloat(document.getElementById('w-amount').value);
         const acc = document.getElementById('w-account').value;
         const meth = document.getElementById('w-method').value;
+        const btn = document.querySelector('.btn-withdraw');
 
         if (window.kycStatus !== "APPROVED") {
-            return alert("Error: Please verify your KYC first!");
+            return alert("Verification Required: Please complete your KYC verification first.");
         }
         if (!amt || amt < 10) {
-            return alert("Minimum withdrawal is $10!");
+            return alert("Minimum withdrawal amount is $10.00");
         }
         if (amt > window.userBal) {
-            return alert("Insufficient balance!");
+            return alert("Insufficient Funds: You cannot withdraw more than your current balance.");
         }
-        if (!acc) return alert("Please enter account details!");
+        if (!acc) return alert("Please provide your account/wallet details.");
+
+        btn.innerText = "Processing...";
+        btn.disabled = true;
 
         const requestData = {
             uid: auth.currentUser.uid,
@@ -94,16 +228,16 @@
             timestamp: Date.now()
         };
 
-        // Add to global withdrawals list for Admin
         db.ref('withdrawals').push(requestData).then(() => {
-            // Deduct balance immediately or wait for admin approval (as per your choice)
-            // Yahan hum sirf request bhej rahe hain
-            alert("Withdrawal request sent! Admin will process it within 24h.");
+            alert("Success! Your withdrawal request has been submitted to the VIP queue.");
             window.location.href = "index.html";
+        }).catch(err => {
+            alert("Error: " + err.message);
+            btn.innerText = "Submit Withdrawal";
+            btn.disabled = false;
         });
     }
 </script>
 
 </body>
-    </html>
-      
+</html>
