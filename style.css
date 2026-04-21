@@ -1,5 +1,0 @@
-:root { --bg: #0b0e11; --card: #1e2329; --yellow: #f0b90b; --green: #02c076; --red: #f6465d; }
-body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; }
-.card { background: var(--card); border: 1px solid #2b3139; padding: 20px; border-radius: 12px; margin: 10px; }
-.btn-yellow { background: var(--yellow); color: black; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; }
-input, select { background: #2b3139; border: 1px solid #474d57; color: white; padding: 10px; border-radius: 5px; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
