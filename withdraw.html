@@ -15,114 +15,65 @@
             --text-main: #eaecef;
             --text-muted: #848e9c;
             --input-bg: #2b3139;
+            --red: #f6465d;
         }
 
         body { 
             background: var(--bg); 
             color: var(--text-main); 
             font-family: 'Inter', -apple-system, sans-serif; 
-            margin: 0; 
-            padding: 20px; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            box-sizing: border-box; 
+            margin: 0; padding: 20px; 
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; box-sizing: border-box; 
         }
 
         .box { 
-            background: var(--card); 
-            padding: 30px; 
-            border-radius: 24px; 
-            width: 100%; 
-            max-width: 420px; 
-            border: 1px solid rgba(255,255,255,0.05); 
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            background: var(--card); padding: 30px; border-radius: 24px; 
+            width: 100%; max-width: 420px; border: 1px solid rgba(255,255,255,0.05); 
+            text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
-        .nav-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 25px; 
-        }
-        
-        .back-link { 
-            color: var(--text-muted); 
-            text-decoration: none; 
-            font-size: 13px; 
-            font-weight: 500;
-        }
-
-        h2 { font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
+        .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .back-link { color: var(--text-muted); text-decoration: none; font-size: 13px; }
 
         .bal-card { 
             background: linear-gradient(145deg, #181a20, #0b0e11); 
-            padding: 25px; 
-            border-radius: 20px; 
-            margin: 25px 0; 
-            border: 1px solid rgba(252, 213, 53, 0.2);
-            position: relative;
-            overflow: hidden;
+            padding: 20px; border-radius: 20px; margin-bottom: 20px; 
+            border: 1px solid rgba(252, 213, 53, 0.1);
         }
-        
-        .bal-card::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(252,213,53,0.05) 0%, transparent 70%);
-        }
-
-        .bal-card small { color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-size: 10px; font-weight: 700; }
-        #current-bal { font-size: 32px; font-weight: 800; color: var(--yellow); margin-top: 5px; }
+        .bal-card small { color: var(--text-muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        #current-bal { font-size: 28px; font-weight: 800; color: var(--yellow); }
 
         .input-group { text-align: left; margin-bottom: 15px; }
-        .input-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; margin-left: 5px; }
+        .input-group label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 6px; margin-left: 5px; }
 
         input, select { 
-            width: 100%; 
-            padding: 14px 16px; 
-            background: var(--input-bg); 
-            border: 1px solid #474d57; 
-            color: white; 
-            border-radius: 12px; 
-            box-sizing: border-box; 
-            font-size: 15px;
-            outline: none;
-            transition: all 0.3s;
+            width: 100%; padding: 14px; background: var(--input-bg); 
+            border: 1px solid #474d57; color: white; border-radius: 12px; 
+            box-sizing: border-box; outline: none; transition: 0.3s;
         }
+        input:focus { border-color: var(--yellow); }
 
-        input:focus, select:focus { border-color: var(--yellow); }
+        /* Fees Summary Box */
+        .fee-summary {
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 13px;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+        .fee-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .total-row { border-top: 1px solid #333; margin-top: 8px; padding-top: 8px; font-weight: bold; color: var(--yellow); }
 
         .btn-withdraw { 
-            width: 100%; 
-            padding: 16px; 
-            background: var(--yellow); 
-            color: black; 
-            border: none; 
-            border-radius: 14px; 
-            font-weight: 800; 
-            font-size: 16px;
-            cursor: pointer; 
-            margin-top: 15px;
-            transition: transform 0.2s;
+            width: 100%; padding: 16px; background: var(--yellow); 
+            color: black; border: none; border-radius: 14px; 
+            font-weight: 800; cursor: pointer; transition: 0.2s;
         }
         .btn-withdraw:active { transform: scale(0.98); }
 
-        .note-box {
-            background: rgba(255,255,255,0.03);
-            border-radius: 12px;
-            padding: 12px;
-            margin-top: 20px;
-            font-size: 11px;
-            color: var(--text-muted);
-            text-align: left;
-            line-height: 1.6;
-        }
+        .note { font-size: 11px; color: var(--text-muted); margin-top: 15px; text-align: left; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -130,19 +81,19 @@
 <div class="box">
     <div class="nav-header">
         <a href="index.html" class="back-link">← Cancel</a>
-        <span>G-Terminal VIP</span>
-        <div style="width: 40px;"></div> </div>
+        <span style="font-size: 12px; font-weight: bold; color: var(--text-muted);">SECURITY VERIFIED</span>
+    </div>
     
-    <h2>Withdraw Funds</h2>
+    <h2>Withdrawal</h2>
     
     <div class="bal-card">
-        <small>Total Available Balance</small>
+        <small>Available Balance</small>
         <div id="current-bal">$0.00</div>
     </div>
 
     <div class="input-group">
-        <label>WITHDRAW AMOUNT ($)</label>
-        <input type="number" id="w-amount" placeholder="Min. $10.00">
+        <label>AMOUNT TO WITHDRAW ($)</label>
+        <input type="number" id="w-amount" placeholder="0.00" oninput="calculateFees()">
     </div>
 
     <div class="input-group">
@@ -155,35 +106,52 @@
     </div>
 
     <div class="input-group">
-        <label>ACCOUNT DETAILS / WALLET ADDRESS</label>
-        <input type="text" id="w-account" placeholder="Enter account details">
+        <label>ACCOUNT DETAILS</label>
+        <input type="text" id="w-account" placeholder="Number or Address">
+    </div>
+
+    <div class="fee-summary">
+        <div class="fee-row">
+            <span>Service Fee (5%)</span>
+            <span id="fee-amt" style="color: var(--red);">-$0.00</span>
+        </div>
+        <div class="fee-row total-row">
+            <span>You will receive</span>
+            <span id="net-amt">$0.00</span>
+        </div>
     </div>
     
-    <button class="btn-withdraw" onclick="requestWithdraw()">Submit Withdrawal</button>
+    <button class="btn-withdraw" onclick="requestWithdraw()">Submit Request</button>
 
-    <div class="note-box">
-        <b>💡 Withdrawal Policy:</b>
-        <br>• Processing time: 2-24 hours.
-        <br>• Ensure KYC is verified before requesting.
-        <br>• USDT withdrawals are processed via TRC20 network only.
+    <div class="note">
+        <b>Processing Info:</b> Fees are automatically deducted from the requested amount. Minimum withdrawal is $10.
     </div>
 </div>
 
 <script>
-    // Firebase Configuration
-    const firebaseConfig = {
-        apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU",
-        authDomain: "trade-for-profit-8b160.firebaseapp.com",
-        databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com",
-        projectId: "trade-for-profit-8b160",
-        storageBucket: "trade-for-profit-8b160.firebasestorage.app",
-        messagingSenderId: "1077014018991",
-        appId: "1:1077014018991:web:c41320e2ef10291afd4d5a"
+    const firebaseConfig = { 
+        apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", 
+        authDomain: "trade-for-profit-8b160.firebaseapp.com", 
+        databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", 
+        projectId: "trade-for-profit-8b160", 
+        storageBucket: "trade-for-profit-8b160.firebasestorage.app", 
+        messagingSenderId: "1077014018991", 
+        appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" 
     };
-
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
+
+    const FEES_PERCENT = 5; // Yahan se fees change kar sakte hain
+
+    function calculateFees() {
+        const amt = parseFloat(document.getElementById('w-amount').value) || 0;
+        const fee = (amt * FEES_PERCENT) / 100;
+        const net = amt - fee;
+
+        document.getElementById('fee-amt').innerText = "-$" + fee.toFixed(2);
+        document.getElementById('net-amt').innerText = "$" + (net > 0 ? net.toFixed(2) : "0.00");
+    }
 
     auth.onAuthStateChanged(user => {
         if (user) {
@@ -202,26 +170,20 @@
         const amt = parseFloat(document.getElementById('w-amount').value);
         const acc = document.getElementById('w-account').value;
         const meth = document.getElementById('w-method').value;
-        const btn = document.querySelector('.btn-withdraw');
+        const fee = (amt * FEES_PERCENT) / 100;
+        const net = amt - fee;
 
-        if (window.kycStatus !== "APPROVED") {
-            return alert("Verification Required: Please complete your KYC verification first.");
-        }
-        if (!amt || amt < 10) {
-            return alert("Minimum withdrawal amount is $10.00");
-        }
-        if (amt > window.userBal) {
-            return alert("Insufficient Funds: You cannot withdraw more than your current balance.");
-        }
-        if (!acc) return alert("Please provide your account/wallet details.");
-
-        btn.innerText = "Processing...";
-        btn.disabled = true;
+        if (window.kycStatus !== "APPROVED") return alert("KYC Verification Required!");
+        if (!amt || amt < 10) return alert("Minimum withdrawal is $10!");
+        if (amt > window.userBal) return alert("Insufficient balance!");
+        if (!acc) return alert("Enter account details!");
 
         const requestData = {
             uid: auth.currentUser.uid,
             email: auth.currentUser.email,
-            amount: amt,
+            requested_amount: amt,
+            fee_deducted: fee,
+            net_payout: net, // Admin ko pata chalega kitna bhejna hai
             method: meth,
             account: acc,
             status: "PENDING",
@@ -229,12 +191,13 @@
         };
 
         db.ref('withdrawals').push(requestData).then(() => {
-            alert("Success! Your withdrawal request has been submitted to the VIP queue.");
-            window.location.href = "index.html";
-        }).catch(err => {
-            alert("Error: " + err.message);
-            btn.innerText = "Submit Withdrawal";
-            btn.disabled = false;
+            // Withdrawal submit hote hi user ke balance se poora amount minus karna
+            db.ref('users/' + auth.currentUser.uid).update({
+                balance: window.userBal - amt
+            }).then(() => {
+                alert(`Request Sent! $${fee.toFixed(2)} fees deducted. You will receive $${net.toFixed(2)}.`);
+                window.location.href = "index.html";
+            });
         });
     }
 </script>
