@@ -29,21 +29,15 @@
             overflow-x: hidden;
         }
 
-        /* 3D Floating Animation */
         @keyframes floating {
-            0% { transform: translateY(0px) rotateX(0deg); }
-            50% { transform: translateY(-10px) rotateX(2deg); }
-            100% { transform: translateY(0px) rotateX(0deg); }
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
         }
 
-        .header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 15px 5px; 
-        }
-
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 5px; }
         .logo { font-size: 1.5rem; font-weight: 800; color: var(--yellow); letter-spacing: 1px; }
 
-        /* Main Balance Card with Glassmorphism */
         .card-main { 
             background: var(--card);
             backdrop-filter: blur(15px);
@@ -53,47 +47,23 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 20px 40px rgba(0,0,0,0.4);
             animation: floating 4s ease-in-out infinite;
-            position: relative;
-            overflow: hidden;
         }
 
-        .card-main::before {
-            content: ''; position: absolute; top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            background: conic-gradient(transparent, var(--yellow), transparent 30%);
-            animation: rotate 6s linear infinite;
-            opacity: 0.1;
-        }
+        .balance-amount { font-size: 2.5rem; font-weight: bold; color: #fff; margin: 10px 0; }
 
-        @keyframes rotate { 100% { transform: rotate(360deg); } }
-
-        .balance-amount { 
-            font-size: 2.8rem; font-weight: bold; color: #fff; margin: 10px 0;
-            text-shadow: 0 0 20px rgba(240, 185, 11, 0.3);
-        }
-
-        .kyc-badge { 
-            font-size: 0.75rem; padding: 5px 12px; border-radius: 50px; 
-            font-weight: 600; letter-spacing: 0.5px;
-        }
+        .kyc-badge { font-size: 0.75rem; padding: 5px 12px; border-radius: 50px; font-weight: 600; }
         .pending { background: rgba(240, 185, 11, 0.1); color: var(--yellow); border: 1px solid var(--yellow); }
         .approved { background: rgba(2, 192, 118, 0.1); color: var(--green); border: 1px solid var(--green); }
 
-        /* 3D Menu Grid */
         .grid-menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 30px; }
-        
         .menu-item { 
             background: var(--glass);
             padding: 20px; border-radius: 18px; text-align: center; 
             text-decoration: none; color: white; border: 1px solid rgba(255,255,255,0.08);
-            transition: 0.3s;
             display: flex; flex-direction: column; align-items: center; gap: 10px;
         }
-        .menu-item i { font-size: 1.5rem; color: var(--yellow); transition: 0.3s; }
-        .menu-item:active { transform: scale(0.95) translateZ(10px); background: var(--yellow); color: #000; }
-        .menu-item:active i { color: #000; }
+        .menu-item i { font-size: 1.5rem; color: var(--yellow); }
 
-        /* Deposit Section */
         .deposit-card { 
             background: var(--card); padding: 20px; border-radius: 20px; 
             margin-top: 25px; border-left: 4px solid var(--yellow);
@@ -102,20 +72,19 @@
         select, input { 
             width: 100%; padding: 14px; margin: 12px 0; background: #161a1e; 
             border: 1px solid #2b3139; color: white; border-radius: 12px; font-size: 1rem;
+            box-sizing: border-box;
         }
 
         .btn-main { 
             width: 100%; padding: 16px; background: linear-gradient(45deg, #f0b90b, #f8d33a);
-            color: black; border: none; border-radius: 12px; font-weight: 800; 
-            cursor: pointer; box-shadow: 0 10px 20px rgba(240, 185, 11, 0.2);
-            transition: 0.3s;
+            color: black; border: none; border-radius: 12px; font-weight: 800; cursor: pointer;
         }
-        .btn-main:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(240, 185, 11, 0.4); }
 
         .address-box { 
-            background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; 
-            border: 1px dashed #444; text-align: center; margin: 15px 0;
-            color: var(--yellow); font-family: 'Courier New', monospace; font-weight: bold;
+            background: rgba(0,0,0,0.4); padding: 18px; border-radius: 12px; 
+            border: 1px dashed var(--yellow); text-align: center; margin: 15px 0;
+            color: var(--yellow); font-family: monospace; font-size: 1.1rem;
+            word-break: break-all;
         }
     </style>
 </head>
@@ -124,7 +93,7 @@
     <div class="header">
         <div class="logo"><i class="fas fa-bolt"></i> G-TERMINAL</div>
         <div id="auth-area">
-            <button onclick="logout()" id="logout-btn" style="color: #848e9c; background:none; border:none; display:none;"><i class="fas fa-sign-out-alt"></i></button>
+            <button onclick="logout()" id="logout-btn" style="color: #848e9c; background:none; border:none; display:none;"><i class="fas fa-sign-out-alt"></i> Logout</button>
             <button onclick="window.location.href='login.html'" id="login-btn" class="kyc-badge approved">LOGIN</button>
         </div>
     </div>
@@ -139,37 +108,30 @@
     </div>
 
     <div class="grid-menu">
-        <a href="#" onclick="checkAuth('trade.html')" class="menu-item">
-            <i class="fas fa-chart-line"></i> <span>Live Trade</span>
-        </a>
-        <a href="#" onclick="checkAuth('kyc.html')" class="menu-item">
-            <i class="fas fa-user-check"></i> <span>Verification</span>
-        </a>
-        <a href="#" onclick="checkAuth('withdraw.html')" class="menu-item">
-            <i class="fas fa-wallet"></i> <span>Withdraw</span>
-        </a>
-        <a href="transfer.html" class="menu-item">
-            <i class="fas fa-exchange-alt"></i> <span>Transfer</span>
-        </a>
+        <a href="#" onclick="checkAuth('trade.html')" class="menu-item"><i class="fas fa-chart-line"></i> <span>Live Trade</span></a>
+        <a href="#" onclick="checkAuth('kyc.html')" class="menu-item"><i class="fas fa-user-check"></i> <span>Verification</span></a>
+        <a href="#" onclick="checkAuth('withdraw.html')" class="menu-item"><i class="fas fa-wallet"></i> <span>Withdraw</span></a>
+        <a href="transfer.html" class="menu-item"><i class="fas fa-exchange-alt"></i> <span>Transfer</span></a>
     </div>
 
     <div class="deposit-card">
-        <h3 style="margin:0 0 15px 0; display:flex; align-items:center; gap:10px;">
-            <i class="fas fa-arrow-down" style="color:var(--green)"></i> Deposit Funds
-        </h3>
-        <select id="method-selector" onchange="updateAdminAddress()">
+        <h3 style="margin:0 0 15px 0;"><i class="fas fa-arrow-down" style="color:var(--green)"></i> Live Deposit Methods</h3>
+        <p style="font-size: 0.8rem; color: #848e9c;">Select method and copy address:</p>
+        
+        <select id="method-selector">
             <option value="easypaisa">EasyPaisa (PKR)</option>
             <option value="jazzcash">JazzCash (PKR)</option>
             <option value="trc20">USDT (TRC20)</option>
         </select>
-        <div class="address-box" id="admin-address">---</div>
-        <button class="btn-main" onclick="shareReferral()">
-            <i class="fas fa-copy"></i> COPY REFERRAL LINK
+
+        <div class="address-box" id="admin-address">Fetching live...</div>
+        
+        <button class="btn-main" onclick="copyAddress()">
+            <i class="fas fa-copy"></i> COPY ADDRESS / NUMBER
         </button>
     </div>
 
     <script>
-        // Copy your Firebase Config here
         const firebaseConfig = {
             apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU",
             authDomain: "trade-for-profit-8b160.firebaseapp.com",
@@ -184,47 +146,60 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
+        // --- 1. LIVE ADMIN SETTINGS LISTENER ---
+        function listenToPaymentMethods() {
+            const addressBox = document.getElementById('admin-address');
+            const selector = document.getElementById('method-selector');
+
+            db.ref('settings/payment_methods').on('value', (snap) => {
+                const data = snap.val();
+                if (!data) return;
+
+                const refreshUI = () => {
+                    const val = selector.value;
+                    if(val === "easypaisa") addressBox.innerText = data.easypaisa || "N/A";
+                    else if(val === "jazzcash") addressBox.innerText = data.jazzcash || "N/A";
+                    else if(val === "trc20") addressBox.innerText = data.usdt_address || "N/A";
+                };
+
+                selector.onchange = refreshUI;
+                refreshUI(); // Initial load
+            });
+        }
+
+        // --- 2. USER DATA & AUTH ---
         auth.onAuthStateChanged(user => {
             if (user) {
                 document.getElementById('logout-btn').style.display = 'block';
                 document.getElementById('login-btn').style.display = 'none';
                 
                 db.ref('users/' + user.uid).on('value', (snapshot) => {
-                    let data = snapshot.val();
-                    if (!data) return; // Naye user ka data pehle se set hona chahiye
-
-                    document.getElementById('user-balance').innerText = "$" + parseFloat(data.balance || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
+                    const data = snapshot.val();
+                    if (!data) return;
+                    document.getElementById('user-balance').innerText = "$" + parseFloat(data.balance || 0).toFixed(2);
                     const kycEl = document.getElementById('user-kyc');
                     kycEl.innerText = data.kyc_status || "NOT VERIFIED";
                     kycEl.className = "kyc-badge " + (data.kyc_status === 'APPROVED' ? 'approved' : 'pending');
-                    window.userReferralCode = data.referral_code;
                 });
             }
         });
 
-        function updateAdminAddress() {
-            const method = document.getElementById('method-selector').value;
-            db.ref('admin_settings/payments/' + method).once('value', (snap) => {
-                document.getElementById('admin-address').innerText = snap.val() || "Loading...";
-            });
-        }
-
-        function shareReferral() {
-            if(!window.userReferralCode) return alert("Please Login!");
-            const link = window.location.origin + "/register.html?ref=" + window.userReferralCode;
-            navigator.clipboard.writeText(link);
-            alert("Referral Link Copied!");
+        function copyAddress() {
+            const text = document.getElementById('admin-address').innerText;
+            navigator.clipboard.writeText(text);
+            alert("Copied: " + text);
         }
 
         function checkAuth(url) {
             if (auth.currentUser) window.location.href = url;
-            else alert("Login Required!");
+            else alert("Please Login First!");
         }
 
         function logout() { auth.signOut().then(() => window.location.reload()); }
 
-        updateAdminAddress();
+        // Start listeners
+        listenToPaymentMethods();
     </script>
 </body>
     </html>
-                
+    
