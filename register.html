@@ -3,229 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create VIP Account | Trade Pro</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <title>Aether | Create VIP Account</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;800&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #0b0e11;
-            --card: #1e2329;
-            --yellow: #fcd535;
-            --yellow-hover: #f0b90b;
-            --text-gray: #848e9c;
-            --input-bg: #2b3139;
+        :root { --yellow: #fcd535; --glass: rgba(255, 255, 255, 0.03); }
+        body { 
+            background: radial-gradient(circle at center, #0a1020 0%, #03050a 100%);
+            color: white; font-family: 'Plus Jakarta Sans', sans-serif;
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
         }
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', -apple-system, system-ui, sans-serif;
-            background-color: var(--bg);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+        .reg-card {
+            background: var(--glass); padding: 35px; border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.1); width: 100%; max-width: 380px;
+            backdrop-filter: blur(20px); box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
-
-        .register-container {
-            width: 100%;
-            max-width: 400px;
-            padding: 20px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            color: var(--yellow);
-            margin-bottom: 8px;
-            font-weight: 800;
-        }
-
-        .header p {
-            color: var(--text-gray);
-            font-size: 14px;
-        }
-
-        .form-card {
-            background: var(--card);
-            padding: 30px;
-            border-radius: 24px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 13px;
-            color: var(--text-gray);
-            margin-bottom: 8px;
-            margin-left: 4px;
-        }
-
-        .input-group input {
-            width: 100%;
-            background: var(--input-bg);
-            border: 1px solid transparent;
-            padding: 14px 16px;
-            border-radius: 12px;
-            color: white;
-            font-size: 15px;
-            box-sizing: border-box;
-            transition: all 0.3s;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: var(--yellow);
-            background: #323942;
-        }
+        h1 { text-align: center; letter-spacing: 2px; font-weight: 800; color: var(--yellow); margin-bottom: 5px; }
+        p.sub { text-align: center; font-size: 12px; color: #888; margin-bottom: 25px; }
 
         .bonus-tag {
-            background: rgba(252, 213, 53, 0.1);
-            color: var(--yellow);
-            padding: 10px;
-            border-radius: 10px;
-            font-size: 12px;
-            text-align: center;
-            margin-bottom: 25px;
-            font-weight: bold;
-            border: 1px dashed var(--yellow);
+            background: rgba(252, 213, 53, 0.1); color: var(--yellow);
+            padding: 12px; border-radius: 12px; font-size: 11px;
+            text-align: center; margin-bottom: 20px; border: 1px dashed var(--yellow);
+            font-weight: 800; letter-spacing: 1px;
         }
+
+        .input-group { margin-bottom: 18px; }
+        label { display: block; font-size: 11px; color: #666; margin-left: 10px; margin-bottom: 5px; text-transform: uppercase; }
+        input {
+            width: 100%; padding: 14px; background: rgba(0,0,0,0.2);
+            border: 1px solid #333; border-radius: 12px; color: white;
+            outline: none; transition: 0.3s; box-sizing: border-box;
+        }
+        input:focus { border-color: var(--yellow); }
 
         .reg-btn {
-            width: 100%;
-            background: var(--yellow);
-            color: #000;
-            border: none;
-            padding: 16px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
-            transition: transform 0.2s, background 0.2s;
+            width: 100%; padding: 16px; background: var(--yellow);
+            border: none; border-radius: 12px; font-weight: 800;
+            cursor: pointer; transition: 0.3s; margin-top: 10px; font-size: 15px;
         }
+        .reg-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(252, 213, 53, 0.2); }
 
-        .reg-btn:hover {
-            background: var(--yellow-hover);
-        }
-
-        .reg-btn:active {
-            transform: scale(0.98);
-        }
-
-        .footer-links {
-            text-align: center;
-            margin-top: 25px;
-            font-size: 14px;
-            color: var(--text-gray);
-        }
-
-        .footer-links a {
-            color: var(--yellow);
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        /* Responsive */
-        @media (max-width: 480px) {
-            .register-container { padding: 15px; }
-            .form-card { padding: 20px; }
-        }
+        .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
+        .footer a { color: var(--yellow); text-decoration: none; }
     </style>
 </head>
 <body>
 
-<div class="register-container">
-    <div class="header">
-        <h1>Join VIP Trade</h1>
-        <p>Start your professional trading journey</p>
+<div class="reg-card">
+    <h1>JOIN VIP</h1>
+    <p class="sub">Access the Aether Trading Terminal</p>
+
+    <div class="bonus-tag">⚡ ACCOUNT CREATION BONUS: $10.00</div>
+
+    <div class="input-group">
+        <label>Email Address</label>
+        <input type="email" id="email" placeholder="name@example.com">
     </div>
 
-    <div class="form-card">
-        <div class="bonus-tag">🎁 Limited Offer: $1.00 Welcome Bonus</div>
-        
-        <div class="input-group">
-            <label>Full Name</label>
-            <input type="text" id="name" placeholder="Enter your name">
-        </div>
-
-        <div class="input-group">
-            <label>Email Address</label>
-            <input type="email" id="email" placeholder="example@mail.com">
-        </div>
-
-        <div class="input-group">
-            <label>Password</label>
-            <input type="password" id="pass" placeholder="Min. 6 characters">
-        </div>
-
-        <button class="reg-btn" onclick="register()">Create Account</button>
+    <div class="input-group">
+        <label>Security Password</label>
+        <input type="password" id="pass" placeholder="Create strong password">
     </div>
 
-    <div class="footer-links">
-        Already have an account? <a href="login.html">Sign In</a>
+    <button class="reg-btn" id="reg-trigger">CREATE ACCOUNT</button>
+
+    <div class="footer">
+        Already have access? <a href="login.html">Login here</a>
     </div>
 </div>
 
-<script>
-    // Firebase Config (Yahan apni config paste karein)
-    const firebaseConfig = { 
-        apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", 
-        authDomain: "trade-for-profit-8b160.firebaseapp.com", 
-        databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", 
-        projectId: "trade-for-profit-8b160", 
-        storageBucket: "trade-for-profit-8b160.firebasestorage.app", 
-        messagingSenderId: "1077014018991", 
-        appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" 
-    };
-    firebase.initializeApp(firebaseConfig);
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    function register() {
+    const firebaseConfig = {
+        apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU",
+        authDomain: "trade-for-profit-8b160.firebaseapp.com",
+        databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com",
+        projectId: "trade-for-profit-8b160",
+        storageBucket: "trade-for-profit-8b160.firebasestorage.app",
+        messagingSenderId: "1077014018991",
+        appId: "1:1077014018991:web:24f051595ac36857fd4d5a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    document.getElementById('reg-trigger').onclick = () => {
         const e = document.getElementById('email').value;
         const p = document.getElementById('pass').value;
-        const n = document.getElementById('name').value;
-        
-        if(!e || !p || !n) {
-            alert("Please fill all fields");
-            return;
-        }
 
-        const btn = document.querySelector('.reg-btn');
-        btn.innerText = "Processing...";
-        btn.disabled = true;
+        if(!e || p.length < 6) return alert("Valid email and 6+ char password required!");
 
-        firebase.auth().createUserWithEmailAndPassword(e, p).then((res) => {
-            const uid = res.user.uid;
-            const refCode = "GT-" + uid.substring(0,5).toUpperCase();
-            
-            firebase.database().ref('users/' + uid).set({
-                name: n,
-                email: e,
-                balance: 1.0,
-                kyc_status: "NOT_VERIFIED",
-                referral_code: refCode,
-                control: "NORMAL",
-                joined_at: Date.now()
-            }).then(() => {
-                alert("Account Created Successfully! $1 Bonus Added.");
-                window.location.href = "index.html";
-            });
-        }).catch(err => {
-            alert(err.message);
-            btn.innerText = "Create Account";
-            btn.disabled = false;
-        });
-    }
+        createUserWithEmailAndPassword(auth, e, p)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                // Create user profile in Database with $10 Bonus
+                set(ref(db, 'users/' + user.uid), {
+                    email: e,
+                    balance: 10.00,
+                    kyc_status: "UNVERIFIED",
+                    trade_force: "NORMAL",
+                    created_at: Date.now()
+                }).then(() => {
+                    alert("Account Created! You received $10 Bonus.");
+                    window.location.href = "index.html";
+                });
+            })
+            .catch(err => alert("Error: " + err.message));
+    };
 </script>
 
 </body>
