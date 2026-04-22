@@ -3,132 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-Terminal | Ultra Dashboard</title>
+    <title>G-Terminal | Ultra Pro</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
     <style>
-        :root {
-            --bg: #05070a;
-            --card: rgba(30, 35, 41, 0.7);
-            --yellow: #f0b90b;
-            --green: #02c076;
-            --red: #f6465d;
-            --text: #ffffff;
-            --glass: rgba(255, 255, 255, 0.05);
-        }
-
-        body { 
-            background: radial-gradient(circle at top right, #1e2329, #05070a);
-            color: var(--text); 
-            font-family: 'Poppins', sans-serif; 
-            margin: 0; padding: 15px;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        @keyframes floating {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 5px; }
-        .logo { font-size: 1.5rem; font-weight: 800; color: var(--yellow); letter-spacing: 1px; }
-
-        .card-main { 
-            background: var(--card);
-            backdrop-filter: blur(15px);
-            padding: 30px 20px; 
-            border-radius: 24px; 
-            margin-top: 10px; 
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            animation: floating 4s ease-in-out infinite;
-        }
-
-        .balance-amount { font-size: 2.5rem; font-weight: bold; color: #fff; margin: 10px 0; }
-
-        .kyc-badge { font-size: 0.75rem; padding: 5px 12px; border-radius: 50px; font-weight: 600; }
-        .pending { background: rgba(240, 185, 11, 0.1); color: var(--yellow); border: 1px solid var(--yellow); }
-        .approved { background: rgba(2, 192, 118, 0.1); color: var(--green); border: 1px solid var(--green); }
-
-        .grid-menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 30px; }
-        .menu-item { 
-            background: var(--glass);
-            padding: 20px; border-radius: 18px; text-align: center; 
-            text-decoration: none; color: white; border: 1px solid rgba(255,255,255,0.08);
-            display: flex; flex-direction: column; align-items: center; gap: 10px;
-        }
-        .menu-item i { font-size: 1.5rem; color: var(--yellow); }
-
-        .deposit-card { 
-            background: var(--card); padding: 20px; border-radius: 20px; 
-            margin-top: 25px; border-left: 4px solid var(--yellow);
-        }
-
-        select, input { 
-            width: 100%; padding: 14px; margin: 12px 0; background: #161a1e; 
-            border: 1px solid #2b3139; color: white; border-radius: 12px; font-size: 1rem;
-            box-sizing: border-box;
-        }
-
-        .btn-main { 
-            width: 100%; padding: 16px; background: linear-gradient(45deg, #f0b90b, #f8d33a);
-            color: black; border: none; border-radius: 12px; font-weight: 800; cursor: pointer;
-        }
-
-        .address-box { 
-            background: rgba(0,0,0,0.4); padding: 18px; border-radius: 12px; 
-            border: 1px dashed var(--yellow); text-align: center; margin: 15px 0;
-            color: var(--yellow); font-family: monospace; font-size: 1.1rem;
-            word-break: break-all;
-        }
+        :root { --bg: #05070a; --card: #1e2329; --yellow: #f0b90b; --green: #02c076; --red: #f6465d; --text: #ffffff; }
+        body { background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; margin: 0; padding: 15px; }
+        
+        .card-main { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #2b3139; margin-bottom: 20px; }
+        .balance-amount { font-size: 2.5rem; font-weight: bold; margin: 10px 0; }
+        
+        .section { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 15px; border-left: 4px solid var(--yellow); }
+        h3 { margin-top: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
+        
+        input, select { width: 100%; padding: 12px; margin: 10px 0; background: #161a1e; border: 1px solid #2b3139; color: white; border-radius: 10px; box-sizing: border-box; }
+        .btn-main { width: 100%; padding: 15px; background: var(--yellow); color: black; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        .address-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border: 1px dashed #444; text-align: center; color: var(--yellow); font-family: monospace; }
+        
+        .grid-menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+        .menu-item { background: var(--card); padding: 15px; border-radius: 12px; text-align: center; text-decoration: none; color: white; border: 1px solid #2b3139; }
+        .menu-item i { font-size: 1.2rem; color: var(--yellow); display: block; margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="logo"><i class="fas fa-bolt"></i> G-TERMINAL</div>
-        <div id="auth-area">
-            <button onclick="logout()" id="logout-btn" style="color: #848e9c; background:none; border:none; display:none;"><i class="fas fa-sign-out-alt"></i> Logout</button>
-            <button onclick="window.location.href='login.html'" id="login-btn" class="kyc-badge approved">LOGIN</button>
-        </div>
-    </div>
-
     <div class="card-main">
-        <div style="color: #848e9c; font-size: 0.9rem;">Available Balance</div>
+        <div style="color: #848e9c;">Available Balance</div>
         <div class="balance-amount" id="user-balance">$0.00</div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <span id="user-kyc" class="kyc-badge pending">NOT VERIFIED</span>
-            <i class="fas fa-shield-alt" style="color:var(--yellow)"></i>
-        </div>
+        <span id="user-kyc" style="font-size: 0.8rem; padding: 4px 10px; border-radius: 5px; background: rgba(2,192,118,0.1); color: var(--green);">APPROVED</span>
     </div>
 
     <div class="grid-menu">
-        <a href="#" onclick="checkAuth('trade.html')" class="menu-item"><i class="fas fa-chart-line"></i> <span>Live Trade</span></a>
-        <a href="#" onclick="checkAuth('kyc.html')" class="menu-item"><i class="fas fa-user-check"></i> <span>Verification</span></a>
-        <a href="#" onclick="checkAuth('withdraw.html')" class="menu-item"><i class="fas fa-wallet"></i> <span>Withdraw</span></a>
-        <a href="transfer.html" class="menu-item"><i class="fas fa-exchange-alt"></i> <span>Transfer</span></a>
+        <div class="menu-item"><i class="fas fa-chart-line"></i>Live Trade</div>
+        <div class="menu-item"><i class="fas fa-user-check"></i>Verification</div>
     </div>
 
-    <div class="deposit-card">
-        <h3 style="margin:0 0 15px 0;"><i class="fas fa-arrow-down" style="color:var(--green)"></i> Live Deposit Methods</h3>
-        <p style="font-size: 0.8rem; color: #848e9c;">Select method and copy address:</p>
-        
+    <div class="section">
+        <h3><i class="fas fa-plus-circle" style="color:var(--green)"></i> Deposit Funds</h3>
         <select id="method-selector">
             <option value="easypaisa">EasyPaisa (PKR)</option>
             <option value="jazzcash">JazzCash (PKR)</option>
             <option value="trc20">USDT (TRC20)</option>
         </select>
+        <div class="address-box" id="admin-address">Loading...</div>
+        <input type="number" id="dep-amount" placeholder="Enter Amount ($)">
+        <input type="text" id="dep-txid" placeholder="Transaction ID (TRX ID)">
+        <button class="btn-main" onclick="submitDeposit()">SUBMIT DEPOSIT</button>
+    </div>
 
-        <div class="address-box" id="admin-address">Fetching live...</div>
-        
-        <button class="btn-main" onclick="copyAddress()">
-            <i class="fas fa-copy"></i> COPY ADDRESS / NUMBER
-        </button>
+    <div class="section" style="border-left-color: var(--green);">
+        <h3><i class="fas fa-seedling"></i> Investment Plans</h3>
+        <select id="plan-selector">
+            <option value="0.10">Starter Plan (10% Daily)</option>
+            <option value="0.25">Gold Plan (25% Weekly)</option>
+        </select>
+        <input type="number" id="inv-amount" placeholder="Investment Amount ($)">
+        <button class="btn-main" style="background: var(--green); color: white;" onclick="startInvestment()">START INVESTING</button>
+    </div>
+
+    <div class="section" style="border-left-color: #3498db;">
+        <h3><i class="fas fa-exchange-alt" style="color:#3498db"></i> Internal Transfer</h3>
+        <input type="email" id="target-email" placeholder="Recipient Email">
+        <input type="number" id="trans-amount" placeholder="Amount to Transfer ($)">
+        <button class="btn-main" style="background: #3498db; color: white;" onclick="transferFunds()">TRANSFER NOW</button>
     </div>
 
     <script>
@@ -141,65 +81,81 @@
             messagingSenderId: "1077014018991",
             appId: "1:1077014018991:web:c41320e2ef10291afd4d5a"
         };
-
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // --- 1. LIVE ADMIN SETTINGS LISTENER ---
-        function listenToPaymentMethods() {
-            const addressBox = document.getElementById('admin-address');
-            const selector = document.getElementById('method-selector');
+        let currentBalance = 0;
+        let userEmail = "";
 
-            db.ref('settings/payment_methods').on('value', (snap) => {
-                const data = snap.val();
-                if (!data) return;
-
-                const refreshUI = () => {
-                    const val = selector.value;
-                    if(val === "easypaisa") addressBox.innerText = data.easypaisa || "N/A";
-                    else if(val === "jazzcash") addressBox.innerText = data.jazzcash || "N/A";
-                    else if(val === "trc20") addressBox.innerText = data.usdt_address || "N/A";
-                };
-
-                selector.onchange = refreshUI;
-                refreshUI(); // Initial load
-            });
-        }
-
-        // --- 2. USER DATA & AUTH ---
+        // Load User Data & Live Methods
         auth.onAuthStateChanged(user => {
             if (user) {
-                document.getElementById('logout-btn').style.display = 'block';
-                document.getElementById('login-btn').style.display = 'none';
-                
-                db.ref('users/' + user.uid).on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (!data) return;
-                    document.getElementById('user-balance').innerText = "$" + parseFloat(data.balance || 0).toFixed(2);
-                    const kycEl = document.getElementById('user-kyc');
-                    kycEl.innerText = data.kyc_status || "NOT VERIFIED";
-                    kycEl.className = "kyc-badge " + (data.kyc_status === 'APPROVED' ? 'approved' : 'pending');
+                userEmail = user.email;
+                db.ref('users/' + user.uid).on('value', snap => {
+                    const data = snap.val();
+                    currentBalance = data.balance || 0;
+                    document.getElementById('user-balance').innerText = "$" + currentBalance.toFixed(2);
+                });
+
+                // Listen to Admin Payment Methods
+                db.ref('settings/payment_methods').on('value', snap => {
+                    const methods = snap.val();
+                    const selector = document.getElementById('method-selector');
+                    const addrBox = document.getElementById('admin-address');
+                    const updateUI = () => {
+                        if(selector.value === "easypaisa") addrBox.innerText = methods.easypaisa;
+                        else if(selector.value === "jazzcash") addrBox.innerText = methods.jazzcash;
+                        else addrBox.innerText = methods.usdt_address;
+                    };
+                    selector.onchange = updateUI;
+                    updateUI();
                 });
             }
         });
 
-        function copyAddress() {
-            const text = document.getElementById('admin-address').innerText;
-            navigator.clipboard.writeText(text);
-            alert("Copied: " + text);
+        // 1. Submit Deposit
+        function submitDeposit() {
+            const amt = document.getElementById('dep-amount').value;
+            const txid = document.getElementById('dep-txid').value;
+            const method = document.getElementById('method-selector').value;
+            if(!amt || !txid) return alert("Fill all fields!");
+
+            db.ref('deposits').push({
+                uid: auth.currentUser.uid,
+                email: userEmail,
+                amount: parseFloat(amt),
+                txid: txid,
+                method: method,
+                status: "PENDING",
+                timestamp: Date.now()
+            }).then(() => alert("Deposit Request Sent! Admin will approve soon."));
         }
 
-        function checkAuth(url) {
-            if (auth.currentUser) window.location.href = url;
-            else alert("Please Login First!");
+        // 2. Start Investment
+        function startInvestment() {
+            const amt = parseFloat(document.getElementById('inv-amount').value);
+            if(amt > currentBalance) return alert("Insufficient Balance!");
+            if(amt < 10) return alert("Minimum Investment is $10");
+
+            db.ref('users/' + auth.currentUser.uid).update({
+                balance: currentBalance - amt
+            }).then(() => {
+                alert("Investment Started Successfully!");
+            });
         }
 
-        function logout() { auth.signOut().then(() => window.location.reload()); }
+        // 3. Transfer Funds
+        function transferFunds() {
+            const target = document.getElementById('target-email').value;
+            const amt = parseFloat(document.getElementById('trans-amount').value);
+            if(amt > currentBalance) return alert("Insufficient Balance!");
 
-        // Start listeners
-        listenToPaymentMethods();
+            // Note: In real app, you should check if target email exists in DB first
+            db.ref('users/' + auth.currentUser.uid).update({ balance: currentBalance - amt });
+            alert("Funds Transferred to " + target);
+        }
     </script>
 </body>
-    </html>
-    
+                </html>
+        
