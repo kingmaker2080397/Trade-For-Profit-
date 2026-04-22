@@ -9,310 +9,172 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
         :root { 
-            --bg: #0b0e11; 
-            --card: #1e2329; 
-            --yellow: #fcd535; 
-            --green: #0ecb81; 
-            --red: #f6465d; 
-            --text: #eaecef;
-            --glass: rgba(255, 255, 255, 0.05);
+            --bg: #0b0e11; --card: #1e2329; --yellow: #fcd535; --green: #0ecb81; --red: #f6465d; 
+            --text: #eaecef; --glass: rgba(255, 255, 255, 0.05);
         }
 
         body { 
-            background: var(--bg); 
-            color: var(--text); 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; 
-            -webkit-font-smoothing: antialiased;
+            background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; 
+            margin: 0; padding: 0; overflow: hidden;
         }
         
-        /* Fake Ticker Modernized */
-        .ticker-wrap { 
-            width: 100%; 
-            overflow: hidden; 
-            background: #181a20; 
-            border-bottom: 1px solid #2b2f36; 
-            height: 30px; 
-            display: flex; 
-            align-items: center; 
-        }
-        .ticker { 
-            white-space: nowrap; 
-            animation: ticker 30s linear infinite; 
-            font-size: 10px; 
-            color: #848e9c; 
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .ticker span { margin-right: 50px; }
+        .ticker-wrap { width: 100%; overflow: hidden; background: #181a20; border-bottom: 1px solid #2b2f36; height: 30px; display: flex; align-items: center; }
+        .ticker { white-space: nowrap; animation: ticker 30s linear infinite; font-size: 10px; color: #848e9c; text-transform: uppercase; }
         @keyframes ticker { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
-        /* Top Bar Modern */
-        .top-bar { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            padding: 12px 20px; 
-            background: var(--card); 
-            border-bottom: 1px solid #2b2f36; 
-        }
-        .symbol-badge {
-            background: rgba(252, 213, 53, 0.1);
-            color: var(--yellow);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-weight: 800;
-            font-size: 14px;
-        }
-        .balance-box { font-size: 14px; color: #848e9c; }
-        #top-bal { color: #fff; font-weight: bold; font-size: 16px; margin-left: 5px; }
-
-        #chart-container { height: 380px; width: 100%; position: relative; background: #000; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: var(--card); }
+        .symbol-badge { background: rgba(252, 213, 53, 0.1); color: var(--yellow); padding: 4px 10px; border-radius: 6px; font-weight: 800; }
         
-        #entry-line { 
-            position: absolute; width: 100%; height: 1px; 
-            border-top: 2px dashed var(--yellow); 
-            display: none; z-index: 100;
-            transition: top 0.3s ease;
-        }
-        #entry-label { 
-            position: absolute; right: 10px; top: -25px; 
-            background: var(--yellow); color: #000; 
-            padding: 3px 10px; font-size: 10px; 
-            font-weight: 900; border-radius: 4px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
+        #chart-container { height: 400px; width: 100%; position: relative; background: #000; }
         
-        /* Win/Loss Result Popup VIP */
-        #result-popup { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
-            display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 30000; 
-        }
-        .res-card { 
-            padding: 40px 20px; border-radius: 28px; text-align: center; 
-            width: 80%; max-width: 320px; 
-            animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-        }
-        .res-win { 
-            background: linear-gradient(145deg, #0ecb81, #0a9d63); 
-            box-shadow: 0 20px 40px rgba(14, 203, 129, 0.3); 
-        }
-        .res-loss { 
-            background: linear-gradient(145deg, #f6465d, #c33043); 
-            box-shadow: 0 20px 40px rgba(246, 70, 93, 0.3); 
-        }
-        .res-card h1 { font-size: 48px; margin-bottom: 5px; letter-spacing: -1px; }
-        .res-card p { opacity: 0.9; font-size: 16px; margin-bottom: 25px; }
-
-        /* Sync Popup */
-        #custom-alert { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);
-            display: none; align-items: center; justify-content: center; z-index: 20000; 
-        }
-        .alert-box { 
-            background: #fff; color: #000; padding: 25px; 
-            border-radius: 20px; width: 80%; max-width: 280px; text-align: center; 
-        }
-        .alert-btn { 
-            margin-top: 20px; background: #000; color: #fff; border: none; 
-            padding: 12px 0; width: 100%; border-radius: 12px; font-weight: bold; 
-        }
-
-        /* Controls VIP */
-        .controls { 
-            background: var(--card); 
-            padding: 25px 20px 40px 20px; 
-            border-radius: 30px 30px 0 0; 
-            margin-top: -30px; 
-            border-top: 1px solid rgba(255,255,255,0.05); 
-            position: relative; z-index: 10; 
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
-        }
-        .input-wrapper {
-            position: relative;
-            margin-bottom: 15px;
-        }
-        .input-box { 
-            background: #2b3139; border: 1px solid #474d57; color: var(--yellow); 
-            padding: 18px; border-radius: 16px; width: 100%; box-sizing: border-box; 
-            font-size: 24px; text-align: center; font-weight: 800; outline: none;
-            transition: border 0.3s;
-        }
-        .input-box:focus { border-color: var(--yellow); }
+        /* Control Panel */
+        .controls { padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: var(--card); border-top-left-radius: 30px; border-top-right-radius: 30px; position: fixed; bottom: 0; width: 100%; box-sizing: border-box; }
+        .trade-btn { border: none; padding: 18px; border-radius: 15px; font-weight: 900; font-size: 18px; color: #fff; cursor: pointer; transition: 0.2s; }
+        .btn-up { background: var(--green); box-shadow: 0 5px 15px rgba(14, 203, 129, 0.3); }
+        .btn-down { background: var(--red); box-shadow: 0 5px 15px rgba(246, 70, 93, 0.3); }
         
-        .btn-group { display: flex; gap: 15px; }
-        .btn { 
-            flex: 1; padding: 18px; border: none; border-radius: 16px; 
-            font-weight: 800; font-size: 16px; cursor: pointer; 
-            color: white; transition: transform 0.1s;
-            display: flex; flex-direction: column; align-items: center; gap: 4px;
-        }
-        .btn:active { transform: scale(0.96); }
-        .btn span { font-size: 10px; opacity: 0.8; font-weight: 400; }
-        .up { background: var(--green); box-shadow: 0 4px 0 #0a9d63; } 
-        .down { background: var(--red); box-shadow: 0 4px 0 #c33043; }
-
-        .panel { padding: 20px; background: var(--bg); }
-        .row { 
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 15px; background: var(--glass); margin-bottom: 8px;
-            border-radius: 12px; font-size: 13px; 
-        }
-
-        @keyframes popUp { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        /* Result Popup */
+        #result-popup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+        .res-card { padding: 40px; border-radius: 28px; text-align: center; width: 280px; transition: 0.3s; }
+        .res-win { background: linear-gradient(145deg, #0ecb81, #0a9d63); }
+        .res-loss { background: linear-gradient(145deg, #f6465d, #c33043); }
+        
+        .timer-overlay { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; font-weight: bold; color: var(--yellow); border: 1px solid var(--yellow); display: none; }
     </style>
 </head>
 <body>
 
-<div id="result-popup">
-    <div id="res-card" class="res-card">
-        <h1 id="res-status">WIN</h1>
-        <p id="res-msg">Profit Added to Account</p>
-        <button onclick="closeResult()" style="background: white; color: black; border: none; padding: 14px 0; width: 100%; border-radius: 14px; font-weight: 900; cursor: pointer;">CONTINUE</button>
-    </div>
-</div>
-
-<div id="custom-alert">
-    <div class="alert-box">
-        <p style="font-size: 12px; color: #999; margin: 0;">Market Execution</p>
-        <p style="font-weight: bold; margin: 10px 0;">Syncing with Global Price...</p>
-        <button class="alert-btn" onclick="startTrade()">CONFIRM TRADE</button>
-    </div>
-</div>
-
 <div class="ticker-wrap">
     <div class="ticker">
-        <span>● Malik_Trade +$1,500.00</span> <span>● Rahul_Vip -$450.00</span> <span>● KingMaker +$5,000.00</span> <span>● Pro_Trader +$120.00</span>
+        <span>BTC/USDT +2.45%</span> <span>User Malik_77 Withdrew $450</span> <span>ETH/USDT -1.12%</span> <span>New VIP Signal: BUY BTC</span>
     </div>
 </div>
 
 <div class="top-bar">
-    <div class="symbol-badge">BTC/USDT</div>
+    <div class="symbol-badge">BTC/USDT ⚡</div>
     <div class="balance-box">Wallet: <span id="top-bal">$0.00</span></div>
 </div>
 
 <div id="chart-container">
-    <div id="entry-line"><span id="entry-label">ENTRY @ 0.00</span></div>
-    <iframe id="tv-chart" src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:BTCUSDT&interval=1&theme=dark" style="width: 100%; height: 100%; border: none;"></iframe>
+    <div class="timer-overlay" id="trade-timer">00:60</div>
+    <iframe id="tradingview_chart" src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_76292&symbol=BINANCE%3ABTCUSDT&interval=1&hidesidetoolbar=1&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=%5B%5D&theme=dark&style=1&timezone=Etc%2FUTC" width="100%" height="100%" frameborder="0" allowtransparency="true" scrolling="no" allowfullscreen></iframe>
 </div>
 
 <div class="controls">
-    <div id="status-text" style="text-align:center; color: #848e9c; font-size:11px; margin-bottom:15px; font-weight:bold; letter-spacing: 1px;">ANALYZING LIVE MARKET...</div>
-    
-    <div class="input-wrapper">
-        <input type="number" id="trade-amt" class="input-box" value="10">
-    </div>
-
-    <div class="btn-group">
-        <button class="btn up" onclick="openPopup('UP')">CALL <span>Higher</span></button>
-        <button class="btn down" onclick="openPopup('DOWN')">PUT <span>Lower</span></button>
-    </div>
+    <input type="number" id="trade-amount" placeholder="Amount ($)" style="grid-column: span 2; padding: 12px; border-radius: 10px; border: 1px solid #474d57; background: #2b3139; color: white;">
+    <button class="trade-btn btn-up" onclick="startTrade('BUY')">CALL (UP)</button>
+    <button class="trade-btn btn-down" onclick="startTrade('SELL')">PUT (DOWN)</button>
 </div>
 
-<div class="panel">
-    <div style="margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-        <div style="width:4px; height:15px; background:var(--yellow); border-radius:2px;"></div>
-        <span style="color:white; font-size:12px; font-weight:bold; opacity:0.8;">GLOBAL RANKING</span>
-    </div>
-    <div id="lb-list">
-        <div class="row">
-            <span style="display:flex; align-items:center; gap:8px;">
-                <img src="https://flagcdn.com/w20/pk.png" style="width:18px; border-radius:2px;"> hussain002424
-            </span>
-            <span style="color:var(--red); font-weight:bold;">-$420.50</span>
-        </div>
+<div id="result-popup">
+    <div class="res-card" id="res-card">
+        <h1 id="res-status">WIN</h1>
+        <p id="res-msg">Profit: +$0.00</p>
+        <button onclick="location.reload()" style="margin-top:20px; padding:10px 20px; border-radius:10px; border:none; background:#fff; color:#000; font-weight:bold;">DONE</button>
     </div>
 </div>
 
 <script>
-    // [LOGIC REMAINS UNTOUCHED]
-    const firebaseConfig = { apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", authDomain: "trade-for-profit-8b160.firebaseapp.com", databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", projectId: "trade-for-profit-8b160", storageBucket: "trade-for-profit-8b160.firebasestorage.app", messagingSenderId: "1077014018991", appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" };
+    const firebaseConfig = { 
+        apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", 
+        authDomain: "trade-for-profit-8b160.firebaseapp.com", 
+        databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", 
+        projectId: "trade-for-profit-8b160", 
+        storageBucket: "trade-for-profit-8b160.firebasestorage.app", 
+        messagingSenderId: "1077014018991", 
+        appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" 
+    };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
     const auth = firebase.auth();
+    const db = firebase.database();
 
-    let livePrice = 0;
-    let selectedDir = "";
+    let currentBalance = 0;
 
-    setInterval(() => {
-        fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT')
-        .then(r => r.json()).then(d => { livePrice = parseFloat(d.price); });
-    }, 500);
-
-    auth.onAuthStateChanged(u => {
-        if(u) {
-            db.ref('users/'+u.uid).on('value', s => {
-                const d = s.val() || {};
-                document.getElementById('top-bal').innerText = "$" + (d.balance || 0).toFixed(2);
-                if(d.activeTrade) runTrade(u.uid, d.activeTrade);
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            db.ref('users/' + user.uid).on('value', snap => {
+                const data = snap.val();
+                currentBalance = data.balance;
+                document.getElementById('top-bal').innerText = "$" + currentBalance.toFixed(2);
             });
+        } else {
+            window.location.href = "login.html";
         }
     });
 
-    function openPopup(dir) {
-        selectedDir = dir;
-        document.getElementById('custom-alert').style.display = 'flex';
-    }
-
-    function startTrade() {
-        document.getElementById('custom-alert').style.display = 'none';
-        const u = auth.currentUser;
-        const amt = parseFloat(document.getElementById('trade-amt').value);
-        db.ref('users/'+u.uid).once('value', s => {
-            const bal = s.val().balance || 0;
-            if(amt > bal) return alert("Low Balance");
-            const trade = { dir: selectedDir, amount: amt, entryPrice: livePrice, startTime: Date.now(), status: "running" };
-            db.ref('users/'+u.uid).update({ balance: bal - amt, activeTrade: trade });
-        });
-    }
-
-    function runTrade(uid, t) {
-        const line = document.getElementById('entry-line');
-        const timeLeft = 60 - Math.floor((Date.now() - t.startTime)/1000);
-        if(timeLeft <= 0) {
-            line.style.display = "none";
-            finishTrade(uid, t);
-        } else {
-            line.style.display = "block";
-            document.getElementById('status-text').innerText = "TRADE CLOSING IN " + timeLeft + "s";
-            document.getElementById('status-text').style.color = "var(--yellow)";
-            document.getElementById('entry-label').innerText = "ENTRY @ " + t.entryPrice;
-            setTimeout(() => runTrade(uid, t), 1000);
+    function startTrade(type) {
+        const amt = parseFloat(document.getElementById('trade-amount').value);
+        if (!amt || amt > currentBalance || amt < 1) {
+            alert("Invalid Amount!");
+            return;
         }
+
+        // Lock Buttons
+        document.querySelectorAll('.trade-btn').forEach(b => b.disabled = true);
+        document.getElementById('trade-timer').style.display = 'block';
+        
+        let timeLeft = 60;
+        const timerInt = setInterval(() => {
+            timeLeft--;
+            document.getElementById('trade-timer').innerText = "00:" + (timeLeft < 10 ? "0" + timeLeft : timeLeft);
+            if (timeLeft <= 0) {
+                clearInterval(timerInt);
+                processResult(amt, type);
+            }
+        }, 1000);
     }
 
-    function finishTrade(uid, t) {
-        db.ref('users/'+uid).once('value', s => {
-            const win = (s.val().control === "WIN");
-            const profit = win ? (t.amount * 1.85) : 0;
-            
-            const pop = document.getElementById('result-popup');
+    function processResult(amt, type) {
+        const uid = auth.currentUser.uid;
+        
+        // Admin Controls Fetching
+        const globalRef = db.ref('settings/globalControl');
+        const userRef = db.ref('users/' + uid);
+
+        Promise.all([globalRef.get(), userRef.get()]).then(results => {
+            const globalMode = results[0].val() || "NORMAL";
+            const userData = results[1].val();
+            const manualControl = userData.control || "NORMAL";
+            const winRate = userData.winRate || 50;
+
+            let isWin = false;
+
+            // Logic Tree
+            if (globalMode === "WIN") isWin = true;
+            else if (globalMode === "LOSS") isWin = false;
+            else if (manualControl === "WIN") isWin = true;
+            else if (manualControl === "LOSS") isWin = false;
+            else {
+                isWin = Math.floor(Math.random() * 100) < winRate;
+            }
+
+            // Calculations
+            const profit = isWin ? (amt * 1.85) : 0;
+            const newBal = (currentBalance - amt) + profit;
+
+            // Show Result
+            document.getElementById('result-popup').style.display = 'flex';
             const card = document.getElementById('res-card');
-            pop.style.display = 'flex';
-            if(win) {
+            
+            if (isWin) {
                 card.className = "res-card res-win";
                 document.getElementById('res-status').innerText = "WIN";
-                document.getElementById('res-msg').innerText = "Profit: +$" + (t.amount * 0.85).toFixed(2);
+                document.getElementById('res-msg').innerText = "Profit Received: +$" + (amt * 0.85).toFixed(2);
             } else {
                 card.className = "res-card res-loss";
                 document.getElementById('res-status').innerText = "LOSS";
-                document.getElementById('res-msg').innerText = "Market Reversed: -$" + t.amount;
+                document.getElementById('res-msg').innerText = "Market Crashed: -$" + amt;
             }
 
-            db.ref('users/'+uid).update({ balance: s.val().balance + profit, activeTrade: null });
-            document.getElementById('status-text').innerText = "MARKET ANALYZING...";
-            document.getElementById('status-text').style.color = "#848e9c";
+            // Sync with Firebase
+            db.ref('users/' + uid).update({ 
+                balance: newBal,
+                control: "NORMAL" // Reset manual control
+            });
         });
     }
-
-    function closeResult() {
-        document.getElementById('result-popup').style.display = 'none';
-    }
 </script>
+
 </body>
-                                                                                                                                                                         </html>
+    </html>
     
