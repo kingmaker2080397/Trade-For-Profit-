@@ -1,134 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>G-Terminal | Ultra Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    
     <style>
-        :root { 
-            --bg: #05070a; 
-            --card: rgba(30, 35, 41, 0.8); 
-            --yellow: #f0b90b; 
-            --green: #02c076; 
-            --red: #f6465d; 
-            --glass-border: rgba(255, 255, 255, 0.08);
-        }
-
-        /* Smooth Background with Animation */
-        body { 
-            background: radial-gradient(circle at top, #1e2329 0%, #05070a 100%); 
-            color: white; 
-            font-family: 'Poppins', sans-serif; 
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 15px;
-        }
-
-        /* 3D Glass Card Animation */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-
-        .card { 
-            background: var(--card); 
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border); 
-            padding: 25px; 
-            border-radius: 20px; 
-            margin-bottom: 20px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-            animation: float 4s ease-in-out infinite; /* 3D Floating Effect */
-        }
-
-        .balance-title { color: #848e9c; font-size: 0.85rem; font-weight: 600; }
-        .balance-amount { 
-            font-size: 2.5rem; 
-            font-weight: 800; 
-            color: var(--yellow); 
-            margin: 10px 0;
-            text-shadow: 0 0 15px rgba(240, 185, 11, 0.3);
-        }
-
-        /* 3D Neon Button */
-        .btn-yellow { 
-            background: linear-gradient(45deg, var(--yellow), #f8d33a);
-            color: black; 
-            border: none; 
-            padding: 15px; 
-            border-radius: 12px; 
-            font-weight: 800; 
-            width: 100%; 
-            cursor: pointer; 
-            text-transform: uppercase;
-            box-shadow: 0 4px 15px rgba(240, 185, 11, 0.3);
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-
-        .btn-yellow:hover {
-            box-shadow: 0 8px 25px rgba(240, 185, 11, 0.5);
-            transform: translateY(-3px);
-        }
-
-        /* Modern Modern Inputs */
-        input, select { 
-            background: #161a1e; 
-            border: 1px solid #2b3139; 
-            color: white; 
-            padding: 14px; 
-            border-radius: 12px; 
-            width: 100%; 
-            box-sizing: border-box; 
-            margin-bottom: 15px; 
-            outline: none;
-            font-size: 1rem;
-        }
-
-        input:focus { border-color: var(--yellow); }
-
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        :root { --bg: #05070a; --card: rgba(30, 35, 41, 0.8); --yellow: #f0b90b; --green: #02c076; --red: #f6465d; }
+        body { background: radial-gradient(circle at top, #1e2329 0%, #05070a 100%); color: white; font-family: 'Poppins', sans-serif; margin: 0; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+        .card { background: var(--card); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); animation: float 4s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .balance-amount { font-size: 2.5rem; font-weight: 800; color: var(--yellow); text-shadow: 0 0 15px rgba(240,185,11,0.3); }
+        .btn-main { background: var(--yellow); color: black; border: none; padding: 15px; border-radius: 12px; font-weight: 800; width: 100%; cursor: pointer; margin-top: 10px; transition: 0.3s; }
         .kyc-badge { font-size: 0.7rem; padding: 5px 12px; border-radius: 50px; font-weight: bold; border: 1px solid; }
-        .pending { border-color: var(--yellow); color: var(--yellow); background: rgba(240, 185, 11, 0.1); }
-        .approved { border-color: var(--green); color: var(--green); background: rgba(2, 192, 118, 0.1); }
+        .pending { border-color: var(--yellow); color: var(--yellow); } .approved { border-color: var(--green); color: var(--green); }
     </style>
 </head>
 <body>
-
-    <div class="header">
-        <h2 style="margin:0; color:var(--yellow); letter-spacing:1px;">G-TERMINAL</h2>
-        <div id="kyc-status" class="kyc-badge pending">NOT VERIFIED</div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="margin:0;">G-TERMINAL <span style="color:var(--yellow)">PRO</span></h2>
+        <div id="kyc-status"></div>
     </div>
 
     <div class="card">
-        <div class="balance-title">TOTAL BALANCE (USDT)</div>
-        <div class="balance-amount" id="user-balance">$0.00</div>
-        <div style="font-size: 0.8rem; color: var(--green); font-weight: bold;">+ $1.00 Welcome Bonus Active</div>
+        <small style="color:#848e9c">AVAILABLE BALANCE</small>
+        <div id="user-bal" class="balance-amount">$0.00</div>
+        <div style="display:flex; justify-content:space-between; margin-top:15px;">
+            <button onclick="location.href='investment.html'" style="background:none; color:white; border:1px solid #444; padding:8px 20px; border-radius:8px;">Deposit</button>
+            <button onclick="location.href='withdraw.html'" style="background:none; color:white; border:1px solid #444; padding:8px 20px; border-radius:8px;">Withdraw</button>
+        </div>
     </div>
 
-    <div class="card" style="animation-delay: 1s;">
-        <h3 style="margin-top:0;">Quick Actions</h3>
-        <select id="method-selector">
-            <option value="easypaisa">EasyPaisa (PKR)</option>
-            <option value="jazzcash">JazzCash (PKR)</option>
-            <option value="trc20">USDT (TRC20)</option>
-        </select>
-        <div id="admin-address" style="background:rgba(0,0,0,0.3); padding:15px; border-radius:10px; border:1px dashed #444; text-align:center; color:var(--yellow); font-family:monospace; margin-bottom:15px;">
-            03442585087
-        </div>
-        <button class="btn-yellow" onclick="shareReferral()">Copy Referral Link</button>
-    </div>
+    <button class="btn-main" onclick="location.href='trade.html'">🚀 START TRADING NOW</button>
 
     <script>
-        // Aapka pehle wala Firebase script yahan paste hoga...
+        const firebaseConfig = { apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", authDomain: "trade-for-profit-8b160.firebaseapp.com", databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", projectId: "trade-for-profit-8b160", storageBucket: "trade-for-profit-8b160.firebasestorage.app", messagingSenderId: "1077014018991", appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                db.ref('users/' + user.uid).on('value', snap => {
+                    const d = snap.val();
+                    document.getElementById('user-bal').innerText = "$" + d.balance.toFixed(2);
+                    const kycHtml = `<span class="kyc-badge ${d.kyc_status === 'APPROVED' ? 'approved' : 'pending'}">${d.kyc_status}</span>`;
+                    document.getElementById('kyc-status').innerHTML = kycHtml;
+                });
+            } else { window.location.href = "login.html"; }
+        });
     </script>
 </body>
 </html>
