@@ -1,35 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-Terminal | Login</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aether | Login Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;800&display=swap" rel="stylesheet">
     <style>
-        body { background: #0b0e11; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: #1e2329; padding: 30px; border-radius: 12px; width: 320px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; background: #2b3139; border: 1px solid #474d57; color: white; border-radius: 5px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 12px; background: #f0b90b; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; }
+        :root { --yellow: #f0b90b; --glass: rgba(255, 255, 255, 0.03); }
+        body { 
+            background: radial-gradient(circle at center, #0a1020 0%, #03050a 100%);
+            color: white; font-family: 'Plus Jakarta Sans', sans-serif;
+            display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;
+        }
+        .login-card {
+            background: var(--glass); padding: 40px; border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1); width: 340px;
+            backdrop-filter: blur(20px); box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        h2 { text-align: center; letter-spacing: 5px; font-weight: 200; margin-bottom: 30px; }
+        h2 span { color: var(--yellow); font-weight: 800; }
+        
+        .input-group { margin-bottom: 20px; }
+        input {
+            width: 100%; padding: 14px; background: rgba(0,0,0,0.2);
+            border: 1px solid #333; border-radius: 12px; color: white;
+            outline: none; transition: 0.3s; box-sizing: border-box;
+        }
+        input:focus { border-color: var(--yellow); box-shadow: 0 0 15px rgba(240, 185, 11, 0.1); }
+        
+        .login-btn {
+            width: 100%; padding: 16px; background: var(--yellow);
+            border: none; border-radius: 12px; font-weight: 800;
+            cursor: pointer; transition: 0.3s; margin-top: 10px;
+        }
+        .login-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(240, 185, 11, 0.2); }
+        
+        .footer-links { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
+        .footer-links a { color: var(--yellow); text-decoration: none; }
     </style>
 </head>
 <body>
-<div class="box">
-    <h2 style="color:#f0b90b; text-align:center;">Login</h2>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="pass" placeholder="Password">
-    <button class="btn" onclick="login()">Login</button>
+
+<div class="login-card">
+    <h2>G-<span>TERMINAL</span></h2>
+    
+    <div class="input-group">
+        <input type="email" id="email" placeholder="Access Email">
+    </div>
+    
+    <div class="input-group">
+        <input type="password" id="pass" placeholder="Security Key (Password)">
+    </div>
+    
+    <button class="login-btn" id="login-trigger">INITIALIZE SESSION</button>
+    
+    <div class="footer-links">
+        No access? <a href="register.html">Request Account</a>
+    </div>
 </div>
-<script>
-    const firebaseConfig = { apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", authDomain: "trade-for-profit-8b160.firebaseapp.com", databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", projectId: "trade-for-profit-8b160", storageBucket: "trade-for-profit-8b160.firebasestorage.app", messagingSenderId: "1077014018991", appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" };
-    firebase.initializeApp(firebaseConfig);
-    function login() {
+
+<script type="module">
+    // Modern Firebase v10 Integration
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU",
+        authDomain: "trade-for-profit-8b160.firebaseapp.com",
+        databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com",
+        projectId: "trade-for-profit-8b160",
+        storageBucket: "trade-for-profit-8b160.firebasestorage.app",
+        messagingSenderId: "1077014018991",
+        appId: "1:1077014018991:web:24f051595ac36857fd4d5a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    document.getElementById('login-trigger').onclick = () => {
         const e = document.getElementById('email').value;
         const p = document.getElementById('pass').value;
-        firebase.auth().signInWithEmailAndPassword(e, p)
-        .then(() => { window.location.href = "index.html"; })
-        .catch(err => alert(err.message));
-    }
+
+        if(!e || !p) return alert("Enter credentials!");
+
+        signInWithEmailAndPassword(auth, e, p)
+            .then(() => {
+                window.location.href = "index.html";
+            })
+            .catch(err => {
+                alert("Access Denied: " + err.message);
+            });
+    };
 </script>
+
 </body>
-  </html
-    >
+</html>
