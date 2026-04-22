@@ -1,55 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-Terminal | Ultra Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aether G-Terminal | Live Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;800&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #05070a; --card: rgba(30, 35, 41, 0.8); --yellow: #f0b90b; --green: #02c076; --red: #f6465d; }
-        body { background: radial-gradient(circle at top, #1e2329 0%, #05070a 100%); color: white; font-family: 'Poppins', sans-serif; margin: 0; min-height: 100vh; padding: 20px; box-sizing: border-box; }
-        .card { background: var(--card); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); animation: float 4s ease-in-out infinite; }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        .balance-amount { font-size: 2.5rem; font-weight: 800; color: var(--yellow); text-shadow: 0 0 15px rgba(240,185,11,0.3); }
-        .btn-main { background: var(--yellow); color: black; border: none; padding: 15px; border-radius: 12px; font-weight: 800; width: 100%; cursor: pointer; margin-top: 10px; transition: 0.3s; }
-        .kyc-badge { font-size: 0.7rem; padding: 5px 12px; border-radius: 50px; font-weight: bold; border: 1px solid; }
-        .pending { border-color: var(--yellow); color: var(--yellow); } .approved { border-color: var(--green); color: var(--green); }
+        :root {
+            --plasma-core: rgba(0, 255, 242, 0.6);
+            --bg-deep: #03050a;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --neon-green: #00ff95;
+            --neon-red: #ff3c5f;
+            --yellow: #f0b90b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: radial-gradient(circle at 50% 50%, #0a1020 0%, var(--bg-deep) 100%);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Animated Mesh Background */
+        .mesh {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+            opacity: 0.1; z-index: -1;
+        }
+
+        .header {
+            position: absolute; top: 30px; letter-spacing: 5px;
+            font-weight: 200; font-size: 1.2rem; text-transform: uppercase;
+        }
+        .header span { color: var(--yellow); font-weight: 800; }
+
+        #kyc-badge {
+            position: absolute; top: 70px; font-size: 10px;
+            padding: 4px 12px; border-radius: 20px;
+            background: var(--glass); border: 1px solid var(--yellow);
+            color: var(--yellow); letter-spacing: 1px;
+        }
+
+        /* Plasma Core Dashboard */
+        .plasma-container {
+            position: relative; width: 320px; height: 320px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .plasma-ring {
+            position: absolute; width: 100%; height: 100%;
+            border-radius: 50%; border: 1px solid var(--border-glass);
+            box-shadow: 0 0 30px rgba(0, 255, 242, 0.05);
+            animation: rotate 20s linear infinite;
+        }
+
+        .balance-box { text-align: center; z-index: 10; }
+        .balance-box small { color: rgba(255,255,255,0.4); letter-spacing: 4px; font-size: 0.6rem; }
+        .balance-box h1 {
+            font-size: 2.8rem; font-weight: 800;
+            background: linear-gradient(to bottom, #fff, #888);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* Buttons logic */
+        .action-container { display: flex; gap: 40px; margin-top: 50px; }
+        .vapor-btn {
+            width: 150px; height: 55px; background: var(--glass);
+            border: 1px solid var(--border-glass); border-radius: 15px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.4s; backdrop-filter: blur(10px);
+            font-weight: 800; font-size: 0.8rem; letter-spacing: 1px;
+        }
+        .vapor-btn.locked { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); }
+        .vapor-btn:not(.locked):hover {
+            transform: translateY(-5px); border-color: var(--color);
+            box-shadow: 0 10px 20px var(--color-semi);
+        }
+
+        /* Animations */
+        @keyframes rotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .conduit {
+            position: absolute; bottom: 0; width: 100%; height: 60px;
+            border-top: 1px solid var(--border-glass);
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(transparent, rgba(0,255,149,0.02));
+        }
     </style>
 </head>
 <body>
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h2 style="margin:0;">G-TERMINAL <span style="color:var(--yellow)">PRO</span></h2>
-        <div id="kyc-status"></div>
-    </div>
 
-    <div class="card">
-        <small style="color:#848e9c">AVAILABLE BALANCE</small>
-        <div id="user-bal" class="balance-amount">$0.00</div>
-        <div style="display:flex; justify-content:space-between; margin-top:15px;">
-            <button onclick="location.href='investment.html'" style="background:none; color:white; border:1px solid #444; padding:8px 20px; border-radius:8px;">Deposit</button>
-            <button onclick="location.href='withdraw.html'" style="background:none; color:white; border:1px solid #444; padding:8px 20px; border-radius:8px;">Withdraw</button>
+    <div class="mesh"></div>
+    <div class="header">TRADE FOR <span>PROFIT</span></div>
+    <div id="kyc-badge">FETCHING STATUS...</div>
+
+    <div class="plasma-container">
+        <div class="plasma-ring"></div>
+        <div class="plasma-ring" style="width: 85%; height: 85%; animation-direction: reverse; animation-duration: 10s;"></div>
+        <div class="balance-box">
+            <small>TOTAL ASSETS</small>
+            <h1 id="user-bal">$0.00</h1>
         </div>
     </div>
 
-    <button class="btn-main" onclick="location.href='trade.html'">🚀 START TRADING NOW</button>
+    <div class="action-container">
+        <div id="with-btn" class="vapor-btn locked" style="--color: var(--neon-red); --color-semi: rgba(255,60,95,0.2);">WITHDRAW</div>
+        <div id="dep-btn" class="vapor-btn locked" style="--color: var(--neon-green); --color-semi: rgba(0,255,149,0.2);">DEPOSIT</div>
+    </div>
 
-    <script>
-        const firebaseConfig = { apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", authDomain: "trade-for-profit-8b160.firebaseapp.com", databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com", projectId: "trade-for-profit-8b160", storageBucket: "trade-for-profit-8b160.firebasestorage.app", messagingSenderId: "1077014018991", appId: "1:1077014018991:web:c41320e2ef10291afd4d5a" };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.database();
+    <div class="conduit">
+        <p style="font-size: 0.7rem; letter-spacing: 5px; color: var(--neon-green);">LIVE NETWORK ACTIVE</p>
+    </div>
 
-        auth.onAuthStateChanged(user => {
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU",
+            authDomain: "trade-for-profit-8b160.firebaseapp.com",
+            databaseURL: "https://trade-for-profit-8b160-default-rtdb.firebaseio.com",
+            projectId: "trade-for-profit-8b160",
+            storageBucket: "trade-for-profit-8b160.firebasestorage.app",
+            messagingSenderId: "1077014018991",
+            appId: "1:1077014018991:web:24f051595ac36857fd4d5a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth(app);
+
+        // UI Elements
+        const balDisplay = document.getElementById('user-bal');
+        const kycBadge = document.getElementById('kyc-badge');
+        const depBtn = document.getElementById('dep-btn');
+        const withBtn = document.getElementById('with-btn');
+
+        // Watch Auth & Data
+        onAuthStateChanged(auth, (user) => {
             if (user) {
-                db.ref('users/' + user.uid).on('value', snap => {
-                    const d = snap.val();
-                    document.getElementById('user-bal').innerText = "$" + d.balance.toFixed(2);
-                    const kycHtml = `<span class="kyc-badge ${d.kyc_status === 'APPROVED' ? 'approved' : 'pending'}">${d.kyc_status}</span>`;
-                    document.getElementById('kyc-status').innerHTML = kycHtml;
+                const userRef = ref(db, 'users/' + user.uid);
+                onValue(userRef, (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        // 1. Update Balance with Animation
+                        balDisplay.innerText = `$${data.balance.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+                        
+                        // 2. Handle KYC Status
+                        const status = data.kyc_status || "UNVERIFIED";
+                        kycBadge.innerText = `ACCOUNT: ${status}`;
+                        
+                        if (status === "APPROVED") {
+                            kycBadge.style.borderColor = "var(--neon-green)";
+                            kycBadge.style.color = "var(--neon-green)";
+                            depBtn.classList.remove('locked');
+                            withBtn.classList.remove('locked');
+                            
+                            depBtn.onclick = () => window.location.href = 'deposit.html';
+                            withBtn.onclick = () => window.location.href = 'withdraw.html';
+                        } else {
+                            depBtn.onclick = () => alert("Complete KYC first!");
+                        }
+                    }
                 });
-            } else { window.location.href = "login.html"; }
+            } else {
+                balDisplay.innerText = "LOGIN REQ";
+                kycBadge.innerText = "NOT LOGGED IN";
+            }
         });
     </script>
 </body>
