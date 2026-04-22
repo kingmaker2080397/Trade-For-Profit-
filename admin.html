@@ -3,42 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIP Admin Panel | G-Terminal</title>
+    <title>G-Terminal | Pro Admin</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <style>
         :root { --bg: #0b0e11; --card: #1e2329; --yellow: #fcd535; --green: #0ecb81; --red: #f6465d; --text: #eaecef; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; display: none; }
+        .container { max-width: 1100px; margin: auto; }
+        
+        /* Stats Dashboard Styling */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: var(--card); padding: 20px; border-radius: 12px; border-left: 4px solid var(--yellow); text-align: center; }
+        .stat-card h3 { margin: 0; font-size: 14px; color: #848e9c; }
+        .stat-card p { margin: 10px 0 0; font-size: 24px; font-weight: bold; color: var(--text); }
+
         .section { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #2b3139; }
-        h2 { color: var(--yellow); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        h2 { color: var(--yellow); border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 0; font-size: 18px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #2b3139; }
-        th { color: #848e9c; font-weight: normal; }
-        .btn { padding: 6px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        th { color: #848e9c; }
+
+        .btn { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 11px; transition: 0.3s; }
         .btn-win { background: var(--green); color: white; }
         .btn-loss { background: var(--red); color: white; }
-        .btn-approve { background: #2ebd85; color: white; }
-        .btn-reject { background: #f6465d; color: white; }
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; }
-        input { background: #2b3139; border: 1px solid #474d57; color: white; padding: 5px; border-radius: 4px; width: 80px; }
+        .btn-update { background: var(--yellow); color: black; width: 100%; margin-top: 15px; cursor: pointer; height: 35px; }
+        
+        input { background: #2b3139; border: 1px solid #474d57; color: white; padding: 8px; border-radius: 4px; width: 85%; }
+        .method-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1 style="color: var(--yellow);">Terminal Master Control 👑</h1>
+    <h1 style="color: var(--yellow); text-align: center;">Terminal Master Control 👑</h1>
+
+    <div class="stats-grid">
+        <div class="stat-card"><h3>Total Users</h3><p id="stat-users">0</p></div>
+        <div class="stat-card" style="border-left-color: var(--green);"><h3>Total Balance</h3><p id="stat-balance">$0</p></div>
+        <div class="stat-card" style="border-left-color: #3498db;"><h3>Pending Deps</h3><p id="stat-deps">0</p></div>
+        <div class="stat-card" style="border-left-color: var(--red);"><h3>Pending Withs</h3><p id="stat-withs">0</p></div>
+    </div>
 
     <div class="section">
-        <h2>Users Management</h2>
+        <h2>Payment Gateway Settings (Live App)</h2>
+        <div class="method-inputs">
+            <div><label>EasyPaisa</label><br><input type="text" id="ep_val"></div>
+            <div><label>JazzCash</label><br><input type="text" id="jc_val"></div>
+            <div><label>USDT Address</label><br><input type="text" id="wallet_val"></div>
+        </div>
+        <button class="btn btn-update" onclick="updateSettings()">SAVE & GO LIVE</button>
+    </div>
+
+    <div class="section">
+        <h2>User Management & Trade Control</h2>
         <table id="user-table">
             <thead>
                 <tr>
-                    <th>Name/Email</th>
+                    <th>User Details</th>
                     <th>Balance ($)</th>
                     <th>KYC</th>
-                    <th>Trade Control</th>
+                    <th>Control Mode</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -46,38 +72,31 @@
         </table>
     </div>
 
-    <div class="section">
-        <h2>Pending Deposits</h2>
-        <table id="deposit-table">
-            <thead>
-                <tr>
-                    <th>Email</th>
-                    <th>Amount</th>
-                    <th>Method/TXID</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="deposit-list"></tbody>
-        </table>
-    </div>
-
-    <div class="section">
-        <h2>Pending Withdrawals</h2>
-        <table id="withdraw-table">
-            <thead>
-                <tr>
-                    <th>Email</th>
-                    <th>Net Payout</th>
-                    <th>Method/Acc</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="withdraw-list"></tbody>
-        </table>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="section">
+            <h2>Pending Deposits</h2>
+            <table id="deposit-table">
+                <tbody id="deposit-list"></tbody>
+            </table>
+        </div>
+        <div class="section">
+            <h2>Pending Withdrawals</h2>
+            <table id="withdraw-table">
+                <tbody id="withdraw-list"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <script>
+    // --- PROTECTION ---
+    const ADMIN_PASSCODE = "1234"; 
+    if(prompt("Enter Admin Passcode:") === ADMIN_PASSCODE) {
+        document.body.style.display = "block";
+    } else {
+        window.location.href = "https://google.com";
+    }
+
     const firebaseConfig = { 
         apiKey: "AIzaSyCM_qmcvOXXjJrQHPiracy5SOpTjAJEnYU", 
         authDomain: "trade-for-profit-8b160.firebaseapp.com", 
@@ -90,80 +109,87 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 1. Load Users & Trade Control
+    // Stats & Users Logic
     db.ref('users').on('value', snap => {
         const list = document.getElementById('user-list');
+        let totalBal = 0, userCount = 0;
         list.innerHTML = "";
-        snap.forEach(userSnap => {
-            const u = userSnap.val();
-            const uid = userSnap.key;
+        
+        snap.forEach(uSnap => {
+            const u = uSnap.val();
+            const uid = uSnap.key;
+            userCount++;
+            totalBal += parseFloat(u.balance || 0);
+
             list.innerHTML += `
                 <tr>
-                    <td>${u.name}<br><small style="color:#848e9c">${u.email}</small></td>
-                    <td><input type="number" value="${u.balance}" onchange="updateBal('${uid}', this.value)"></td>
-                    <td><span class="status-badge" style="background:${u.kyc_status==='APPROVED'?'#2ebd85':'#555'}">${u.kyc_status}</span></td>
+                    <td>${u.name}<br><small>${u.email}</small></td>
+                    <td><input type="number" value="${u.balance}" onchange="db.ref('users/${uid}').update({balance: parseFloat(this.value)})"></td>
+                    <td><span style="color:${u.kyc_status==='APPROVED'? 'var(--green)':'#848e9c'}">${u.kyc_status}</span></td>
                     <td>
-                        <button class="btn btn-win" onclick="setControl('${uid}', 'WIN')">FORCE WIN</button>
-                        <button class="btn btn-loss" onclick="setControl('${uid}', 'LOSS')">FORCE LOSS</button>
-                        <br><small>Current: <b>${u.control || 'NORMAL'}</b></small>
+                        <button class="btn btn-win" onclick="db.ref('users/${uid}').update({control:'WIN'})">W</button>
+                        <button class="btn btn-loss" onclick="db.ref('users/${uid}').update({control:'LOSS'})">L</button>
+                        <small>(${u.control || 'Normal'})</small>
                     </td>
-                    <td><button class="btn btn-approve" onclick="approveKYC('${uid}')">Approve KYC</button></td>
+                    <td><button class="btn" style="background:#555; color:white;" onclick="db.ref('users/${uid}').update({kyc_status:'APPROVED'})">Approve</button></td>
                 </tr>`;
         });
+        document.getElementById('stat-users').innerText = userCount;
+        document.getElementById('stat-balance').innerText = "$" + totalBal.toFixed(2);
     });
 
-    // 2. Load Deposits
-    db.ref('deposits').on('value', snap => {
-        const list = document.getElementById('deposit-list');
-        list.innerHTML = "";
-        snap.forEach(depSnap => {
-            const d = depSnap.val();
-            if(d.status === "PENDING") {
-                list.innerHTML += `
-                    <tr>
-                        <td>${d.email}</td>
-                        <td>$${d.amount}</td>
-                        <td>${d.method}<br><small>${d.txid}</small></td>
-                        <td>
-                            <button class="btn btn-approve" onclick="actionDep('${depSnap.key}', '${d.uid}', ${d.amount}, 'APPROVE')">✔</button>
-                            <button class="btn btn-reject" onclick="actionDep('${depSnap.key}', '${d.uid}', 0, 'REJECT')">✖</button>
-                        </td>
-                    </tr>`;
-            }
-        });
-    });
-
-    // 3. Functions
-    function updateBal(uid, val) { db.ref('users/'+uid).update({ balance: parseFloat(val) }); }
-    function setControl(uid, type) { db.ref('users/'+uid).update({ control: type }); alert("Set to " + type); }
-    function approveKYC(uid) { db.ref('users/'+uid).update({ kyc_status: 'APPROVED' }); }
-
-    function actionDep(key, uid, amt, action) {
-        if(action === 'APPROVE') {
-            db.ref('users/'+uid).child('balance').transaction(curr => (curr || 0) + amt);
+    // Payment Settings Logic
+    db.ref('settings/payment_methods').on('value', snap => {
+        const d = snap.val();
+        if(d){
+            document.getElementById('ep_val').value = d.easypaisa || "";
+            document.getElementById('jc_val').value = d.jazzcash || "";
+            document.getElementById('wallet_val').value = d.usdt_address || "";
         }
-        db.ref('deposits/'+key).update({ status: action === 'APPROVE' ? 'SUCCESS' : 'REJECTED' });
+    });
+
+    function updateSettings() {
+        db.ref('settings/payment_methods').update({
+            easypaisa: document.getElementById('ep_val').value,
+            jazzcash: document.getElementById('jc_val').value,
+            usdt_address: document.getElementById('wallet_val').value
+        }).then(() => alert("App Updated Live!"));
     }
 
-    // Load Withdrawals (Simple logic)
+    // Deposits & Withdrawals Stats
+    db.ref('deposits').on('value', snap => {
+        let count = 0;
+        const list = document.getElementById('deposit-list');
+        list.innerHTML = "";
+        snap.forEach(dSnap => {
+            const d = dSnap.val();
+            if(d.status === "PENDING") {
+                count++;
+                list.innerHTML += `<tr><td>${d.email}<br>$${d.amount}</td><td><button class="btn-win" onclick="actionDep('${dSnap.key}','${d.uid}',${d.amount})">✔ Approve</button></td></tr>`;
+            }
+        });
+        document.getElementById('stat-deps').innerText = count;
+    });
+
     db.ref('withdrawals').on('value', snap => {
+        let count = 0;
         const list = document.getElementById('withdraw-list');
         list.innerHTML = "";
         snap.forEach(wSnap => {
             const w = wSnap.val();
             if(w.status === "PENDING") {
-                list.innerHTML += `
-                    <tr>
-                        <td>${w.email}</td>
-                        <td>$${w.net_payout}</td>
-                        <td>${w.method}<br><small>${w.account}</small></td>
-                        <td>
-                            <button class="btn btn-approve" onclick="db.ref('withdrawals/${wSnap.key}').update({status:'SUCCESS'})">Paid</button>
-                        </td>
-                    </tr>`;
+                count++;
+                list.innerHTML += `<tr><td>${w.email}<br>$${w.net_payout}</td><td><button class="btn-loss" onclick="db.ref('withdrawals/${wSnap.key}').update({status:'SUCCESS'})">Paid</button></td></tr>`;
             }
         });
+        document.getElementById('stat-withs').innerText = count;
     });
+
+    function actionDep(key, uid, amt) {
+        db.ref('users/'+uid).child('balance').transaction(c => (c || 0) + amt);
+        db.ref('deposits/'+key).update({ status: 'SUCCESS' });
+    }
 </script>
 </body>
-</html>
+                        </html>
+                        
